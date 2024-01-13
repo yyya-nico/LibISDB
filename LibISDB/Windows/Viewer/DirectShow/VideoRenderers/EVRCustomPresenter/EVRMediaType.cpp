@@ -109,4 +109,4 @@ HRESULT GetDefaultStride(IMFMediaType *pType, LONG *pStride)
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

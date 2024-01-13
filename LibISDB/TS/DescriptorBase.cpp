@@ -88,4 +88,4 @@ bool DescriptorBase::StoreContents(const uint8_t *pPayload)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

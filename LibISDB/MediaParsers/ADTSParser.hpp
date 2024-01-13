@@ -114,7 +114,7 @@ namespace LibISDB
 		bool m_IsStoring;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_ADTS_PARSER_H
+#endif // ifndef LIBISDB_ADTS_PARSER_H

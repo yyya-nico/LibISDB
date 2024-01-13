@@ -78,7 +78,7 @@ namespace LibISDB
 		bool m_PlayRadio;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_VIEWER_ENGINE_H
+#endif // ifndef LIBISDB_VIEWER_ENGINE_H

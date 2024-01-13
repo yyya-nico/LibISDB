@@ -126,4 +126,4 @@ bool ImageMixer_VMR::SetText(LPCTSTR pszText, int x, int y, HFONT hfont, COLORRE
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

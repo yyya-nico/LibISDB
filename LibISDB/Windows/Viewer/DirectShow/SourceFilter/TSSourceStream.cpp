@@ -37,7 +37,7 @@ namespace
 {
 
 
-constexpr long long PTS_CLOCK = 90000LL;	// 90kHz
+constexpr long long PTS_CLOCK = 90000LL; // 90kHz
 
 constexpr long long ERR_PTS_DIFF    = PTS_CLOCK * 5;
 constexpr long long MAX_AUDIO_DELAY = PTS_CLOCK;
@@ -63,8 +63,8 @@ inline long long GetPacketPTS(const TSPacket *pPacket)
 	if (pPacket->GetPayloadSize() >= 14) {
 		const uint8_t *pData = pPacket->GetPayloadData();
 		if (pData != nullptr) {
-			if ((pData[0] == 0) && (pData[1] == 0) && (pData[2] == 1)) {	// PES
-				if ((pData[7] & 0x80) != 0) {	// pts_flag
+			if ((pData[0] == 0) && (pData[1] == 0) && (pData[2] == 1)) { // PES
+				if ((pData[7] & 0x80) != 0) { // pts_flag
 					return GetPTS(&pData[9]);
 				}
 			}
@@ -75,7 +75,7 @@ inline long long GetPacketPTS(const TSPacket *pPacket)
 }
 
 
-}	// namespace
+} // namespace
 
 
 
@@ -432,4 +432,4 @@ bool TSSourceStream::ResizeQueue(size_t QueueSize, size_t PoolSize)
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

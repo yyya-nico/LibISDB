@@ -170,7 +170,7 @@ LIBISDB_PRAGMA_MSVC(warning(pop))
 		return String1.length() == String2.length() && StringCompareI(String1, String2) == 0;
 	}
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_STRING_UTILITIES_H
+#endif // ifndef LIBISDB_STRING_UTILITIES_H

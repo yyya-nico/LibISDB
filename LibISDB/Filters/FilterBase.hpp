@@ -200,7 +200,7 @@ namespace LibISDB
 		OutputFilterInfo m_OutputFilterList[OutputCount];
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_FILTER_BASE_H
+#endif // ifndef LIBISDB_FILTER_BASE_H

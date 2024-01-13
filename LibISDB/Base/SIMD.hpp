@@ -86,7 +86,7 @@ namespace LibISDB
 	void SetSSE2Enabled(bool Enabled) noexcept;
 #endif
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_SIMD_H
+#endif // ifndef LIBISDB_SIMD_H

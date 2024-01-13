@@ -199,7 +199,7 @@ namespace LibISDB
 		return std::error_code(static_cast<int>(Code), BonDriverSourceFilter::GetErrorCategory());
 	}
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
 namespace std
@@ -208,4 +208,4 @@ namespace std
 }
 
 
-#endif	// ifndef LIBISDB_BON_DRIVER_SOURCE_FILTER_H
+#endif // ifndef LIBISDB_BON_DRIVER_SOURCE_FILTER_H

@@ -59,8 +59,8 @@
 #define LIBISDB_SSE_SUPPORT
 #ifndef LIBISDB_NO_SSE2
 #define LIBISDB_SSE2_SUPPORT
-#endif	// ifndef LIBISDB_NO_SSE2
-#endif	// ifndef LIBISDB_NO_SSE
+#endif // ifndef LIBISDB_NO_SSE2
+#endif // ifndef LIBISDB_NO_SSE
 #endif
 
 #if !defined(NDEBUG) && (defined(_DEBUG) || defined(DEBUG))
@@ -240,7 +240,7 @@ namespace LibISDB
 			return static_cast<size_t>(a);
 		}
 
-	}	// namespace Literals
+	} // namespace Literals
 
 #define LIBISDB_CAT_SYMBOL_(a, b) a##b
 #define LIBISDB_CAT_SYMBOL(a, b) LIBISDB_CAT_SYMBOL_(a, b)
@@ -274,13 +274,13 @@ namespace LibISDB
 		template<typename T> concept Enum = std::is_enum_v<T>;
 		template<typename T> concept EnumClass = IsEnumClass<T>;
 
-	}	// namespace Concept
+	} // namespace Concept
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
 #include "Templates/EnumFlags.hpp"
 #include "Templates/ReturnArg.hpp"
 
 
-#endif	// ifndef LIBISDB_BASE_H
+#endif // ifndef LIBISDB_BASE_H

@@ -305,7 +305,7 @@ bool StreamSelector::MakePAT(const TSPacket *pSrcPacket, TSPacket *pDstPacket)
 	pDstData += HeaderSize;
 	std::memset(pDstData, 0xFF, TS_PACKET_SIZE - HeaderSize);
 
-	if (pPayloadData[0] != 0)	// table_id 不正
+	if (pPayloadData[0] != 0) // table_id 不正
 		return false;
 
 	const uint16_t SectionLength = static_cast<uint16_t>(((pPayloadData[1] & 0x0F) << 8) | pPayloadData[2]);
@@ -410,4 +410,4 @@ void StreamSelector::StreamTypeTable::FromStreamFlags(StreamFlag Flags) noexcept
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

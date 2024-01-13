@@ -35,10 +35,10 @@
 #endif
 #include <crtdbg.h>
 #define LIBISDB_DEBUG_NEW ::new(_NORMAL_BLOCK, __FILE__, __LINE__)
-#else	// _MSC_VER
+#else // _MSC_VER
 #include <cassert>
-#endif	// !def _MSC_VER
-#endif	// LIBISDB_DEBUG
+#endif // !def _MSC_VER
+#endif // LIBISDB_DEBUG
 
 #include <format>
 #include <source_location>
@@ -109,7 +109,7 @@ namespace LibISDB
 #define LIBISDB_TRACE_ERROR_IF_NOT(Condition)   (Condition)
 #endif
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_DEBUG_H
+#endif // ifndef LIBISDB_DEBUG_H

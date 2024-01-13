@@ -73,7 +73,7 @@ namespace LibISDB
 		using ReturnArg<T>::operator =;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_RETURN_ARG_H
+#endif // ifndef LIBISDB_RETURN_ARG_H

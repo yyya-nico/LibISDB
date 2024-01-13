@@ -46,4 +46,4 @@
 #endif
 
 
-#endif	// ifndef LIBISDB_CONFIG_H
+#endif // ifndef LIBISDB_CONFIG_H

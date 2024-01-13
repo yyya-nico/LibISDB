@@ -65,7 +65,7 @@ namespace LibISDB::DirectShow
 		uint8_t m_LastChannelConfig;
 	};
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow
 
 
-#endif	// ifndef LIBISDB_AAC_DECODER_FAAD2_H
+#endif // ifndef LIBISDB_AAC_DECODER_FAAD2_H

@@ -55,7 +55,7 @@ void AlignedFree(void *pBuffer) noexcept
 }
 
 
-#else	// _MSC_VER
+#else // _MSC_VER
 
 
 namespace
@@ -157,7 +157,7 @@ void AlignedFree(void *pBuffer) noexcept
 }
 
 
-#endif	// !def _MSC_VER
+#endif // !def _MSC_VER
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

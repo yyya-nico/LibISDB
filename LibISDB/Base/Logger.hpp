@@ -58,7 +58,7 @@ namespace LibISDB
 		virtual void OnLog(LogType Type, const CharType *pText) = 0;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_LOGGER_H
+#endif // ifndef LIBISDB_LOGGER_H

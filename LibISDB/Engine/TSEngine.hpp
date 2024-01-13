@@ -158,7 +158,7 @@ namespace LibISDB
 		bool m_StartStreamingOnSourceOpen;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_TS_ENGINE_H
+#endif // ifndef LIBISDB_TS_ENGINE_H

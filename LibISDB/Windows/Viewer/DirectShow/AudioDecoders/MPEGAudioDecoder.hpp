@@ -79,7 +79,7 @@ namespace LibISDB::DirectShow
 		int16_t m_PCMBuffer[PCM_BUFFER_LENGTH];
 	};
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow
 
 
-#endif	// ifndef LIBISDB_MPEG_AUDIO_DECODER_H
+#endif // ifndef LIBISDB_MPEG_AUDIO_DECODER_H

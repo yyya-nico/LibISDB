@@ -98,7 +98,7 @@ namespace LibISDB
 		unsigned long m_TypeID = TypeID;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_DATA_BUFFER_H
+#endif // ifndef LIBISDB_DATA_BUFFER_H

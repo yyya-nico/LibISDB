@@ -2371,4 +2371,4 @@ bool SystemManagementDescriptor::StoreContents(const uint8_t *pPayload)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

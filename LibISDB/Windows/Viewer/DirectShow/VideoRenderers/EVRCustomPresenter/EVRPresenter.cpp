@@ -242,7 +242,7 @@ HRESULT EVRPresenter::CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **pp
 }
 
 
-LIBISDB_PRAGMA_MSVC(warning(disable : 4355))	// 'this' used in base member initializer list
+LIBISDB_PRAGMA_MSVC(warning(disable : 4355)) // 'this' used in base member initializer list
 
 EVRPresenter::EVRPresenter(HRESULT &hr)
 	: m_RenderState(RenderState::Shutdown)
@@ -1777,4 +1777,4 @@ float EVRPresenter::GetMaxRate(BOOL bThin)
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

@@ -139,7 +139,7 @@ namespace LibISDB
 		uint8_t m_Version;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_STREAM_SELECTOR_H
+#endif // ifndef LIBISDB_STREAM_SELECTOR_H

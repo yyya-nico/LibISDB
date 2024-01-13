@@ -494,7 +494,7 @@ namespace LibISDB
 
 #endif
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_STRING_FORMAT_H
+#endif // ifndef LIBISDB_STRING_FORMAT_H

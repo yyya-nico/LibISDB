@@ -256,32 +256,32 @@ bool ARIBStringDecoder::DecodeString(const uint8_t *pSrcData, size_t SrcLength, 
 					SrcPos++;
 				}
 				switch (pSrcData[SrcPos]) {
-				case 0x0D:	// APR
+				case 0x0D: // APR
 					*pDstString += ARIB_STR(LIBISDB_NEWLINE);
 					break;
-				case 0x0F:	// LS0
+				case 0x0F: // LS0
 					m_LockingGL = 0;
 					break;
-				case 0x0E:	// LS1
+				case 0x0E: // LS1
 					m_LockingGL = 1;
 					break;
-				case 0x19:	// SS2
+				case 0x19: // SS2
 					m_SingleGL = 2;
 					break;
-				case 0x1D:	// SS3
+				case 0x1D: // SS3
 					m_SingleGL = 3;
 					break;
-				case 0x1B:	// ESC
+				case 0x1B: // ESC
 					m_ESCSeqCount = 1;
 					break;
-				case 0x20:	// SP
+				case 0x20: // SP
 					if (IsSmallCharMode()) {
 						*pDstString += ARIB_STR(' ');
 					} else {
 						*pDstString += ARIB_STR("　");
 					}
 					break;
-				case 0xA0:	// SP
+				case 0xA0: // SP
 					*pDstString += ARIB_STR(' ');
 					break;
 
@@ -297,42 +297,42 @@ bool ARIBStringDecoder::DecodeString(const uint8_t *pSrcData, size_t SrcLength, 
 					SetFormat(pDstString->length());
 					break;
 
-				case 0x88:	// SSZ 小型
+				case 0x88: // SSZ 小型
 					m_CharSize = CharSize::Small;
 					SetFormat(pDstString->length());
 					break;
-				case 0x89:	// MSZ 中型
+				case 0x89: // MSZ 中型
 					m_CharSize = CharSize::Medium;
 					SetFormat(pDstString->length());
 					break;
-				case 0x8A:	// NSZ 標準
+				case 0x8A: // NSZ 標準
 					m_CharSize = CharSize::Normal;
 					SetFormat(pDstString->length());
 					break;
-				case 0x8B:	// SZX 指定サイズ
+				case 0x8B: // SZX 指定サイズ
 					if (++SrcPos >= SrcLength)
 						return false;
 					switch (pSrcData[SrcPos]) {
-					case 0x60: m_CharSize = CharSize::Micro;    break;	// 超小型
-					case 0x41: m_CharSize = CharSize::HighW;    break;	// 縦倍
-					case 0x44: m_CharSize = CharSize::WidthW;   break;	// 横倍
-					case 0x45: m_CharSize = CharSize::SizeW;    break;	// 縦横倍
-					case 0x6B: m_CharSize = CharSize::Special1; break;	// 特殊1
-					case 0x64: m_CharSize = CharSize::Special2; break;	// 特殊2
+					case 0x60: m_CharSize = CharSize::Micro;    break; // 超小型
+					case 0x41: m_CharSize = CharSize::HighW;    break; // 縦倍
+					case 0x44: m_CharSize = CharSize::WidthW;   break; // 横倍
+					case 0x45: m_CharSize = CharSize::SizeW;    break; // 縦横倍
+					case 0x6B: m_CharSize = CharSize::Special1; break; // 特殊1
+					case 0x64: m_CharSize = CharSize::Special2; break; // 特殊2
 					}
 					SetFormat(pDstString->length());
 					break;
 
-				case 0x0C:	// CS
+				case 0x0C: // CS
 					pDstString->push_back(ARIB_STR('\f'));
 					break;
-				case 0x16:	// PAPF
+				case 0x16: // PAPF
 					SrcPos++;
 					break;
-				case 0x1C:	// APS
+				case 0x1C: // APS
 					SrcPos += 2;
 					break;
-				case 0x90:	// COL
+				case 0x90: // COL
 					if (++SrcPos >= SrcLength)
 						return false;
 					if (pSrcData[SrcPos] == 0x20) {
@@ -349,35 +349,35 @@ bool ARIBStringDecoder::DecodeString(const uint8_t *pSrcData, size_t SrcLength, 
 						SetFormat(pDstString->length());
 					}
 					break;
-				case 0x91:	// FLC
+				case 0x91: // FLC
 					SrcPos++;
 					break;
-				case 0x93:	// POL
+				case 0x93: // POL
 					SrcPos++;
 					break;
-				case 0x94:	// WMM
+				case 0x94: // WMM
 					SrcPos++;
 					break;
-				case 0x95:	// MACRO
+				case 0x95: // MACRO
 					do {
 						if (++SrcPos >= SrcLength)
 							return false;
 					} while (pSrcData[SrcPos] != 0x4F);
 					break;
-				case 0x97:	// HLC
+				case 0x97: // HLC
 					SrcPos++;
 					break;
-				case 0x98:	// RPC
+				case 0x98: // RPC
 					if (++SrcPos >= SrcLength)
 						return false;
 					m_RPC = pSrcData[SrcPos] & 0x3F;
 					break;
-				case 0x9B:	//CSI
+				case 0x9B: //CSI
 					{
 						int Length;
 						for (Length = 0; (++SrcPos < SrcLength) && (pSrcData[SrcPos] <= 0x3B); Length++);
 						if (SrcPos < SrcLength) {
-							if (pSrcData[SrcPos] == 0x69) {	// ACS
+							if (pSrcData[SrcPos] == 0x69) { // ACS
 								if (Length != 2)
 									return false;
 								if (pSrcData[SrcPos - 2] >= 0x32) {
@@ -388,7 +388,7 @@ bool ARIBStringDecoder::DecodeString(const uint8_t *pSrcData, size_t SrcLength, 
 						}
 					}
 					break;
-				case 0x9D:	// TIME
+				case 0x9D: // TIME
 					if (++SrcPos >= SrcLength)
 						return false;
 					if (pSrcData[SrcPos] == 0x20) {
@@ -399,7 +399,7 @@ bool ARIBStringDecoder::DecodeString(const uint8_t *pSrcData, size_t SrcLength, 
 					}
 					break;
 
-				default:	// 非対応
+				default: // 非対応
 					break;
 				}
 			}
@@ -1073,11 +1073,11 @@ void ARIBStringDecoder::ProcessEscapeSeq(uint8_t Code)
 	case 1:
 		switch (Code) {
 		// Invocation of code elements
-		case 0x6E: m_LockingGL = 2; m_ESCSeqCount = 0; return;	// LS2
-		case 0x6F: m_LockingGL = 3; m_ESCSeqCount = 0; return;	// LS3
-		case 0x7E: m_LockingGR = 1; m_ESCSeqCount = 0; return;	// LS1R
-		case 0x7D: m_LockingGR = 2; m_ESCSeqCount = 0; return;	// LS2R
-		case 0x7C: m_LockingGR = 3; m_ESCSeqCount = 0; return;	// LS3R
+		case 0x6E: m_LockingGL = 2; m_ESCSeqCount = 0; return; // LS2
+		case 0x6F: m_LockingGL = 3; m_ESCSeqCount = 0; return; // LS3
+		case 0x7E: m_LockingGR = 1; m_ESCSeqCount = 0; return; // LS1R
+		case 0x7D: m_LockingGR = 2; m_ESCSeqCount = 0; return; // LS2R
+		case 0x7C: m_LockingGR = 3; m_ESCSeqCount = 0; return; // LS3R
 
 		// Designation of graphic sets
 		case 0x24:
@@ -1085,7 +1085,7 @@ void ARIBStringDecoder::ProcessEscapeSeq(uint8_t Code)
 		case 0x29: m_ESCSeqIndex = 1; break;
 		case 0x2A: m_ESCSeqIndex = 2; break;
 		case 0x2B: m_ESCSeqIndex = 3; break;
-		default:   m_ESCSeqCount = 0; return;	// エラー
+		default:   m_ESCSeqCount = 0; return; // エラー
 		}
 		break;
 
@@ -1102,7 +1102,7 @@ void ARIBStringDecoder::ProcessEscapeSeq(uint8_t Code)
 		case 0x29: m_IsESCSeqDRCS = false; m_ESCSeqIndex = 1; break;
 		case 0x2A: m_IsESCSeqDRCS = false; m_ESCSeqIndex = 2; break;
 		case 0x2B: m_IsESCSeqDRCS = false; m_ESCSeqIndex = 3; break;
-		default:   m_ESCSeqCount = 0;      return;	// エラー
+		default:   m_ESCSeqCount = 0;      return; // エラー
 		}
 		break;
 
@@ -1144,23 +1144,23 @@ bool ARIBStringDecoder::DesignationGSET(uint8_t IndexG, uint8_t Code)
 {
 	// Gのグラフィックセットを割り当てる
 	switch (Code) {
-	case 0x42: m_CodeG[IndexG] = CodeSet::Kanji;                    return true;	// Kanji
-	case 0x4A: m_CodeG[IndexG] = CodeSet::Alphanumeric;             return true;	// Alphanumeric
-	case 0x30: m_CodeG[IndexG] = CodeSet::Hiragana;                 return true;	// Hiragana
-	case 0x31: m_CodeG[IndexG] = CodeSet::Katakana;                 return true;	// Katakana
-	case 0x32: m_CodeG[IndexG] = CodeSet::Mosaic_A;                 return true;	// Mosaic A
-	case 0x33: m_CodeG[IndexG] = CodeSet::Mosaic_B;                 return true;	// Mosaic B
-	case 0x34: m_CodeG[IndexG] = CodeSet::Mosaic_C;                 return true;	// Mosaic C
-	case 0x35: m_CodeG[IndexG] = CodeSet::Mosaic_D;                 return true;	// Mosaic D
-	case 0x36: m_CodeG[IndexG] = CodeSet::ProportionalAlphanumeric; return true;	// Proportional Alphanumeric
-	case 0x37: m_CodeG[IndexG] = CodeSet::ProportionalHiragana;     return true;	// Proportional Hiragana
-	case 0x38: m_CodeG[IndexG] = CodeSet::ProportionalKatakana;     return true;	// Proportional Katakana
-	case 0x49: m_CodeG[IndexG] = CodeSet::JIS_X0201_Katakana;       return true;	// JIS X 0201 Katakana
-	case 0x4B: m_CodeG[IndexG] = CodeSet::LatinExtension;           return true;	// Latin Extension
-	case 0x4C: m_CodeG[IndexG] = CodeSet::LatinSpecial;             return true;	// Latin Special
-	case 0x39: m_CodeG[IndexG] = CodeSet::JIS_KanjiPlane1;          return true;	// JIS compatible Kanji Plane 1
-	case 0x3A: m_CodeG[IndexG] = CodeSet::JIS_KanjiPlane2;          return true;	// JIS compatible Kanji Plane 2
-	case 0x3B: m_CodeG[IndexG] = CodeSet::AdditionalSymbols;        return true;	// Additional symbols
+	case 0x42: m_CodeG[IndexG] = CodeSet::Kanji;                    return true; // Kanji
+	case 0x4A: m_CodeG[IndexG] = CodeSet::Alphanumeric;             return true; // Alphanumeric
+	case 0x30: m_CodeG[IndexG] = CodeSet::Hiragana;                 return true; // Hiragana
+	case 0x31: m_CodeG[IndexG] = CodeSet::Katakana;                 return true; // Katakana
+	case 0x32: m_CodeG[IndexG] = CodeSet::Mosaic_A;                 return true; // Mosaic A
+	case 0x33: m_CodeG[IndexG] = CodeSet::Mosaic_B;                 return true; // Mosaic B
+	case 0x34: m_CodeG[IndexG] = CodeSet::Mosaic_C;                 return true; // Mosaic C
+	case 0x35: m_CodeG[IndexG] = CodeSet::Mosaic_D;                 return true; // Mosaic D
+	case 0x36: m_CodeG[IndexG] = CodeSet::ProportionalAlphanumeric; return true; // Proportional Alphanumeric
+	case 0x37: m_CodeG[IndexG] = CodeSet::ProportionalHiragana;     return true; // Proportional Hiragana
+	case 0x38: m_CodeG[IndexG] = CodeSet::ProportionalKatakana;     return true; // Proportional Katakana
+	case 0x49: m_CodeG[IndexG] = CodeSet::JIS_X0201_Katakana;       return true; // JIS X 0201 Katakana
+	case 0x4B: m_CodeG[IndexG] = CodeSet::LatinExtension;           return true; // Latin Extension
+	case 0x4C: m_CodeG[IndexG] = CodeSet::LatinSpecial;             return true; // Latin Special
+	case 0x39: m_CodeG[IndexG] = CodeSet::JIS_KanjiPlane1;          return true; // JIS compatible Kanji Plane 1
+	case 0x3A: m_CodeG[IndexG] = CodeSet::JIS_KanjiPlane2;          return true; // JIS compatible Kanji Plane 2
+	case 0x3B: m_CodeG[IndexG] = CodeSet::AdditionalSymbols;        return true; // Additional symbols
 	}
 
 	return false;
@@ -1258,4 +1258,4 @@ size_t ARIBStringDecoder::UTF8ToCodePoint(const uint8_t *pData, size_t Length, u
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

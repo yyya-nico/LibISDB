@@ -102,7 +102,7 @@ namespace LibISDB
 		return std::error_code(static_cast<int>(Code), EDCBPluginWriter::GetErrorCategory());
 	}
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
 namespace std
@@ -111,4 +111,4 @@ namespace std
 }
 
 
-#endif	// ifndef LIBISDB_EDCB_PLUGIN_WRITER_H
+#endif // ifndef LIBISDB_EDCB_PLUGIN_WRITER_H

@@ -35,7 +35,7 @@ namespace LibISDB::DirectShow
 {
 
 
-constexpr long SAMPLE_BUFFER_SIZE = 0x800000L;	// 8MiB
+constexpr long SAMPLE_BUFFER_SIZE = 0x800000L; // 8MiB
 
 
 MPEG2ParserFilter::MPEG2ParserFilter(LPUNKNOWN pUnk, HRESULT *phr)
@@ -177,7 +177,7 @@ HRESULT MPEG2ParserFilter::Transform(IMediaSample *pIn, IMediaSample *pOut)
 }
 
 
-#else	// ndef MPEG2PARSERFILTER_INPLACE
+#else // ndef MPEG2PARSERFILTER_INPLACE
 
 
 HRESULT MPEG2ParserFilter::Transform(IMediaSample *pSample)
@@ -228,7 +228,7 @@ HRESULT MPEG2ParserFilter::Receive(IMediaSample *pSample)
 }
 
 
-#endif	// MPEG2PARSERFILTER_INPLACE
+#endif // MPEG2PARSERFILTER_INPLACE
 
 
 HRESULT MPEG2ParserFilter::StartStreaming()
@@ -334,4 +334,4 @@ void MPEG2ParserFilter::OnMPEG2Sequence(const MPEG2VideoParser *pParser, const M
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

@@ -377,8 +377,10 @@ bool TSEngine::SelectService(uint16_t ServiceID, bool No1Seg)
 	SetVideoPID(VideoPID, true);
 	SetAudioPID(AudioPID, true);
 
-//	if (m_WriteCurServiceOnly)
-//		SetWriteStream(ServiceID, m_WriteStream);
+#if 0
+	if (m_WriteCurServiceOnly)
+		SetWriteStream(ServiceID, m_WriteStream);
+#endif
 
 	if (ServiceChanged)
 		OnServiceChanged(ServiceID);
@@ -837,4 +839,4 @@ void TSEngine::OnFilterRegistered(FilterBase *pFilter, FilterGraph::IDType ID)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

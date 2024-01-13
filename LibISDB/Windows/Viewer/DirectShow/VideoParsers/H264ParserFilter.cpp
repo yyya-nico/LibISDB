@@ -52,7 +52,7 @@ constexpr int FRAME_RATE_FACTOR   = 1001;
 constexpr int FRAME_RATE_1SEG_NUM = 15000;
 
 // バッファサイズ
-constexpr long SAMPLE_BUFFER_SIZE = 0x800000L;	// 8MiB
+constexpr long SAMPLE_BUFFER_SIZE = 0x800000L; // 8MiB
 
 constexpr DWORD INITIAL_BITRATE = 32000000;
 constexpr int INITIAL_WIDTH  = 1920;
@@ -66,7 +66,7 @@ constexpr REFERENCE_TIME CalcFrameTime(LONGLONG Frames, bool OneSeg = false) {
 	return Frames * REFERENCE_TIME_SECOND * FRAME_RATE_FACTOR / (OneSeg ? FRAME_RATE_1SEG_NUM : FRAME_RATE_NUM);
 }
 
-}	// namespace
+} // namespace
 
 
 H264ParserFilter::H264ParserFilter(LPUNKNOWN pUnk, HRESULT *phr)
@@ -613,4 +613,4 @@ void H264ParserFilter::SampleDataPool::Restore(SampleData *pData)
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

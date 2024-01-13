@@ -50,7 +50,7 @@ namespace LibISDB::DirectShow
 		HWND FindVideoWindow() override;
 	};
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow
 
 
-#endif	// ifndef LIBISDB_VIDEO_RENDERER_MADVR_H
+#endif // ifndef LIBISDB_VIDEO_RENDERER_MADVR_H

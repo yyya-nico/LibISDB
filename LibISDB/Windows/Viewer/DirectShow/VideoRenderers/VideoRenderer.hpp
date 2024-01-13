@@ -141,7 +141,7 @@ namespace LibISDB::DirectShow
 		bool m_NoSourcePosition;
 	};
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow
 
 
-#endif	// ifndef LIBISDB_VIDEO_RENDERER_H
+#endif // ifndef LIBISDB_VIDEO_RENDERER_H

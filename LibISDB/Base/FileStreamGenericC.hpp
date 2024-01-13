@@ -71,7 +71,7 @@ namespace LibISDB
 		std::unique_ptr<std::FILE, Closer> m_File;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_FILE_STREAM_GENERIC_C_H
+#endif // ifndef LIBISDB_FILE_STREAM_GENERIC_C_H

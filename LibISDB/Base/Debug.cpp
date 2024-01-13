@@ -129,4 +129,4 @@ bool TraceIf(TraceType Type, bool Condition, const char *pExpression, const std:
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

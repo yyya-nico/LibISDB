@@ -522,4 +522,4 @@ bool VideoRenderer::IsAvailable(RendererType Type)
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

@@ -528,7 +528,7 @@ bool AnalyzerFilter::GetAudioComponentText(int Index, int AudioIndex, ReturnArg<
 }
 
 
-#endif	// LIBISDB_ANALYZER_FILTER_EIT_SUPPORT
+#endif // LIBISDB_ANALYZER_FILTER_EIT_SUPPORT
 
 
 int AnalyzerFilter::GetCaptionESCount(int Index) const
@@ -1557,7 +1557,7 @@ void AnalyzerFilter::AudioComponentDescToAudioInfo(const AudioComponentDescripto
 }
 
 
-#endif	// LIBISDB_ANALYZER_FILTER_EIT_SUPPORT
+#endif // LIBISDB_ANALYZER_FILTER_EIT_SUPPORT
 
 
 bool AnalyzerFilter::GetTOTTime(ReturnArg<DateTime> Time) const
@@ -1597,7 +1597,7 @@ bool AnalyzerFilter::GetInterpolatedTOTTime(ReturnArg<DateTime> Time, OptionalRe
 						Diff = PCRTime - m_TOTInterpolation.PCRTime;
 					else
 						Diff = (0x200000000ULL - m_TOTInterpolation.PCRTime) + PCRTime;
-					if (Diff <= 15 * 90000LL) {	// 最大15秒
+					if (Diff <= 15 * 90000LL) { // 最大15秒
 						Time->OffsetMilliseconds(Diff / 90LL);
 						Interpolated = true;
 					}
@@ -2423,4 +2423,4 @@ void AnalyzerFilter::OnTOTSection(const PSITableBase *pTable, const PSISection *
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

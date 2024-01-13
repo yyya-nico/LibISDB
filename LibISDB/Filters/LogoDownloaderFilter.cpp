@@ -321,7 +321,7 @@ void DSMCCSection::OnLogoData(const LogoDataModule *pModule, const LogoDataModul
 }
 
 
-}	// namespace
+} // namespace
 
 
 
@@ -631,4 +631,4 @@ bool LogoDownloaderFilter::GetTOTTime(DateTime *pTime)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

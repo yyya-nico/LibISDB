@@ -180,7 +180,7 @@ void Thread::SetThreadName(const CharType *pName)
 }
 
 
-#else	// LIBISDB_WINDOWS
+#else // LIBISDB_WINDOWS
 
 
 bool Thread::Start()
@@ -243,7 +243,7 @@ void Thread::SetThreadName(const CharType *pName)
 }
 
 
-#endif	// ndef LIBISDB_WINDOWS
+#endif // ndef LIBISDB_WINDOWS
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

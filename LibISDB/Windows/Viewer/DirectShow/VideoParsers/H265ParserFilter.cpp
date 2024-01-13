@@ -199,4 +199,4 @@ void H265ParserFilter::OnAccessUnit(const H265Parser *pParser, const H265AccessU
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

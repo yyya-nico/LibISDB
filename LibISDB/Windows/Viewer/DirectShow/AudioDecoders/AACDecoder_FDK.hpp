@@ -70,10 +70,10 @@ namespace LibISDB::DirectShow
 		DataBuffer m_PCMBuffer;
 	};
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow
 
 
-#endif	// LIBISDB_HAS_FDK_AAC
+#endif // LIBISDB_HAS_FDK_AAC
 
 
-#endif	// ifndef LIBISDB_AAC_DECODER_FDK_H
+#endif // ifndef LIBISDB_AAC_DECODER_FDK_H

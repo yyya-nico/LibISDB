@@ -578,7 +578,7 @@ LRESULT CALLBACK VideoRenderer_EVR::VideoWndProc(HWND hwnd, UINT uMsg, WPARAM wP
 }
 
 
-#endif	// LIBISDB_EVR_USE_VIDEO_WINDOW
+#endif // LIBISDB_EVR_USE_VIDEO_WINDOW
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

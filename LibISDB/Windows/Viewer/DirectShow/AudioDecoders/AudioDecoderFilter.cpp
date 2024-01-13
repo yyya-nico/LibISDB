@@ -75,7 +75,7 @@ template<typename T> constexpr int16_t ClampSample16(T v)
 }
 
 
-}	// namespace
+} // namespace
 
 
 
@@ -992,11 +992,11 @@ HRESULT AudioDecoderFilter::ProcessSPDIF(
 	BYTE *pOutBuff = pSampleInfo->pData->GetData();
 	WORD *pWordData = reinterpret_cast<WORD*>(pOutBuff);
 	// Burst-preamble
-	pWordData[0] = 0xF872;						// Pa(Sync word 1)
-	pWordData[1] = 0x4E1F;						// Pb(Sync word 2)
-	pWordData[2] = FrameInfo.Pc;				// Pc(Burst-info)
-//	pWordData[3] = ((FrameSize + 1) & ~1) * 8;	// Pd(Length-code)
-	pWordData[3] = FrameSize * 8;				// Pd(Length-code)
+	pWordData[0] = 0xF872;        // Pa(Sync word 1)
+	pWordData[1] = 0x4E1F;        // Pb(Sync word 2)
+	pWordData[2] = FrameInfo.Pc;  // Pc(Burst-info)
+	//pWordData[3] = ((FrameSize + 1) & ~1) * 8; // Pd(Length-code)
+	pWordData[3] = FrameSize * 8; // Pd(Length-code)
 	// Burst-payload
 	int PayloadSize = m_Decoder->GetSPDIFBurstPayload(
 			&pOutBuff[PREAMBLE_SIZE],
@@ -1125,8 +1125,8 @@ size_t AudioDecoderFilter::MonoToStereo(int16_t *pDst, const int16_t *pSrc, size
 
 	while (p < pEnd) {
 		int16_t Value = *p++;
-		*q++ = Value;	// L
-		*q++ = Value;	// R
+		*q++ = Value; // L
+		*q++ = Value; // R
 	}
 
 	return Samples * (sizeof(int16_t) * 2);
@@ -1175,8 +1175,8 @@ size_t AudioDecoderFilter::DownMixStereo(int16_t *pDst, const int16_t *pSrc, siz
 
 			while (p < pEnd) {
 				int16_t Value = *p;
-				*q++ = Value;	// L
-				*q++ = Value;	// R
+				*q++ = Value; // L
+				*q++ = Value; // R
 				p += 2;
 			}
 		} else {
@@ -1211,8 +1211,8 @@ size_t AudioDecoderFilter::DownMixStereo(int16_t *pDst, const int16_t *pSrc, siz
 
 			while (p < pEnd) {
 				int16_t Value = p[1];
-				*q++ = Value;	// L
-				*q++ = Value;	// R
+				*q++ = Value; // L
+				*q++ = Value; // R
 				p += 2;
 			}
 		}
@@ -1416,4 +1416,4 @@ bool AudioDecoderFilter::GetDecoderVersion(DecoderType Type, std::string *pVersi
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

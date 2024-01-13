@@ -120,7 +120,7 @@ namespace LibISDB
 		uint8_t m_DataGroupID;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_CAPTION_PARSER_H
+#endif // ifndef LIBISDB_CAPTION_PARSER_H

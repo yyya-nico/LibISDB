@@ -27,7 +27,7 @@
 #include "../../../../LibISDBPrivate.hpp"
 #include "../../../../LibISDBWindows.hpp"
 #include "VideoParser.hpp"
-#include <numeric>	// for std::gcd()
+#include <numeric> // for std::gcd()
 #include "../../../../Base/DebugDef.hpp"
 
 
@@ -124,4 +124,4 @@ bool VideoParser::SARToDAR(
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

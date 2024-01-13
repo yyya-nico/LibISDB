@@ -325,4 +325,4 @@ void ViewerEngine::UpdateVideoAndAudioPID()
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

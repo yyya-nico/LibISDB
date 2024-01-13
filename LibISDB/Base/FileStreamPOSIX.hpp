@@ -72,7 +72,7 @@ namespace LibISDB
 		Closer m_Closer;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_FILE_STREAM_POSIX_H
+#endif // ifndef LIBISDB_FILE_STREAM_POSIX_H

@@ -484,4 +484,4 @@ bool GetEventExtendedText(
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

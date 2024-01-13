@@ -98,7 +98,7 @@ namespace LibISDB::DirectShow
 		AudioInfo m_AudioInfo;
 	};
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow
 
 
-#endif	// ifndef LIBISDB_AUDIO_DECODER_H
+#endif // ifndef LIBISDB_AUDIO_DECODER_H

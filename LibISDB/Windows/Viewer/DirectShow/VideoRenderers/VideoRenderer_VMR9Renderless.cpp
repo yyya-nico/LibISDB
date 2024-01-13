@@ -297,7 +297,7 @@ STDMETHODIMP VMR9Allocator::InitializeDevice(
 	if (FAILED(hr))
 		return hr;
 
-#if 0	// テクスチャ・サーフェスを作成する場合
+#if 0 // テクスチャ・サーフェスを作成する場合
 	D3DCAPS9 d3dcaps;
 	m_D3DDev->GetDeviceCaps(&d3dcaps);
 	if (d3dcaps.TextureCaps & D3DPTEXTURECAPS_POW2) {
@@ -935,4 +935,4 @@ bool VideoRenderer_VMR9Renderless::SetVisible(bool Visible)
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

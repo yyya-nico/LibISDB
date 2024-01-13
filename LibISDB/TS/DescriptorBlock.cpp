@@ -197,4 +197,4 @@ DescriptorBase * DescriptorBlock::CreateDescriptorInstance(uint8_t Tag)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

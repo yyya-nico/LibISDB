@@ -33,7 +33,7 @@
 #include "DirectShow/VideoParsers/H265ParserFilter.hpp"
 #include "../../Utilities/StringFormat.hpp"
 #include "../../Utilities/StringUtilities.hpp"
-#include <numeric>	// for std::gcd()
+#include <numeric> // for std::gcd()
 #include <dvdmedia.h>
 #include "../../Base/DebugDef.hpp"
 
@@ -189,10 +189,10 @@ void LAVVideoDecoder_NotifyNewSegment(COMPointer<IBaseFilter> &Filter, const Str
 }
 
 
-#endif	// LAV_VIDEO_DECODER_WORKAROUND
+#endif // LAV_VIDEO_DECODER_WORKAROUND
 
 
-}	// namespace
+} // namespace
 
 
 
@@ -2169,4 +2169,4 @@ void ViewerFilter::OnVideoInfoUpdated(const DirectShow::VideoParser::VideoInfo &
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

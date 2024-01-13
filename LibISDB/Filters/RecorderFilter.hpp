@@ -250,7 +250,7 @@ namespace LibISDB
 		TaskEventListener m_TaskEventListener;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_RECORDER_FILTER_H
+#endif // ifndef LIBISDB_RECORDER_FILTER_H

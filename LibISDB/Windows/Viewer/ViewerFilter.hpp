@@ -318,7 +318,7 @@ namespace LibISDB
 		DirectShow::KnownDecoderManager m_KnownDecoderManager;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_VIEWER_FILTER_H
+#endif // ifndef LIBISDB_VIEWER_FILTER_H

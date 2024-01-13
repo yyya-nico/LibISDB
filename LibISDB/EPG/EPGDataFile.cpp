@@ -267,7 +267,7 @@ struct EventGroupInfo {
 LIBISDB_PRAGMA_PACK_POP
 
 
-}	// namespace EPGData
+} // namespace EPGData
 
 
 constexpr uint16_t MAX_EPG_TEXT_LENGTH = 4096;
@@ -375,7 +375,7 @@ void WriteChunkString(Stream &File, uint8_t Tag, const String &Str)
 }
 
 
-}	// namespace
+} // namespace
 
 
 
@@ -1083,4 +1083,4 @@ void EPGDataFile::ExceptionLog(Exception Code)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

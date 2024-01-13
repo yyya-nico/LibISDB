@@ -61,7 +61,7 @@ namespace LibISDB
 		std::fstream m_Stream;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_FILE_STREAM_GENERIC_H
+#endif // ifndef LIBISDB_FILE_STREAM_GENERIC_H

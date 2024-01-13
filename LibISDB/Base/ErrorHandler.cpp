@@ -28,7 +28,7 @@
 #ifdef LIBISDB_WINDOWS
 #include "../LibISDBWindows.hpp"
 #include <tchar.h>
-#endif	// LIBISDB_WINDOWS
+#endif // LIBISDB_WINDOWS
 #include "ErrorHandler.hpp"
 #include "../Utilities/StringFormat.hpp"
 #include "../Utilities/StringUtilities.hpp"
@@ -344,7 +344,7 @@ const std::error_category & HRESULTErrorCategory() noexcept
 }
 
 
-#endif	// LIBISDB_WINDOWS
+#endif // LIBISDB_WINDOWS
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

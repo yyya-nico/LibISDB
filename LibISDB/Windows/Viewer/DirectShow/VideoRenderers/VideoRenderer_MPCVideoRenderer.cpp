@@ -261,4 +261,4 @@ LRESULT CALLBACK VideoRenderer_MPCVideoRenderer::VideoWndProc(HWND hwnd, UINT uM
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

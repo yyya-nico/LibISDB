@@ -155,4 +155,4 @@ HRESULT SamplePool::Clear()
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

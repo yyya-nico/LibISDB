@@ -236,4 +236,4 @@ bool TSSourceFilter::MapAudioPID(uint16_t AudioPID, uint16_t MapPID)
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

@@ -365,4 +365,4 @@ void TSPacketParserFilter::OutputPacket(TSPacket &Packet)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

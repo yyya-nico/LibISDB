@@ -45,7 +45,7 @@ namespace LibISDB
 
 	MD5Value CalcMD5(const uint8_t *pData, size_t DataSize) noexcept;
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_MD5_H
+#endif // ifndef LIBISDB_MD5_H

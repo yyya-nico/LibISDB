@@ -100,4 +100,4 @@ bool GrabberFilter::RemoveGrabber(Grabber *pGrabber)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

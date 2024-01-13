@@ -200,7 +200,7 @@ namespace LibISDB
 		const DescriptorBlock *pDescBlock, ARIBStringDecoder &StringDecoder,
 		ARIBStringDecoder::DecodeFlag DecodeFlags, ReturnArg<String> Text);
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_EVENT_INFO_H
+#endif // ifndef LIBISDB_EVENT_INFO_H

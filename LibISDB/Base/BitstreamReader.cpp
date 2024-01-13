@@ -164,4 +164,4 @@ void BitstreamReader::MarkOverrun() noexcept
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

@@ -89,7 +89,7 @@ bool GetFilterInfoListFromEnumMoniker(IEnumMoniker *pEnum, FilterInfoList *pFilt
 }
 
 
-}	// namespace
+} // namespace
 
 
 
@@ -680,4 +680,4 @@ RECT MapRect(const RECT &Rect, LONG XNum, LONG XDenom, LONG YNum, LONG YDenom)
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

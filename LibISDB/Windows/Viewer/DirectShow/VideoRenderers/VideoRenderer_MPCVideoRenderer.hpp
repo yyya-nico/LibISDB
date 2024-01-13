@@ -63,7 +63,7 @@ namespace LibISDB::DirectShow
 		bool m_ShowCursor = true;
 	};
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow
 
 
-#endif	// ifndef LIBISDB_VIDEO_RENDERER_MPC_VIDEO_RENDERER_H
+#endif // ifndef LIBISDB_VIDEO_RENDERER_MPC_VIDEO_RENDERER_H

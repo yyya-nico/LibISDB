@@ -190,7 +190,7 @@ bool SharedLock::TryLockShared(const std::chrono::milliseconds &Timeout)
 }
 
 
-#else	// LIBISDB_WINDOWS
+#else // LIBISDB_WINDOWS
 
 
 MutexLock::MutexLock()
@@ -287,7 +287,7 @@ bool SharedLock::TryLockShared(const std::chrono::milliseconds &Timeout)
 }
 
 
-#endif	// !def LIBISDB_WINDOWS
+#endif // !def LIBISDB_WINDOWS
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

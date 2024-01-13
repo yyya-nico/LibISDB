@@ -865,15 +865,15 @@ namespace LibISDB
 		// logo_transmission_type
 		enum {
 			TRANSMISSION_UNDEFINED,
-			TRANSMISSION_CDT1,		// CDT伝送方式1
-			TRANSMISSION_CDT2,		// CDT伝送方式2
-			TRANSMISSION_CHAR		// 簡易ロゴ方式
+			TRANSMISSION_CDT1, // CDT伝送方式1
+			TRANSMISSION_CDT2, // CDT伝送方式2
+			TRANSMISSION_CHAR  // 簡易ロゴ方式
 		};
 
-		static constexpr size_t MAX_LOGO_CHAR = 12;		// 最大簡易ロゴ長
-		static constexpr uint16_t LOGO_ID_INVALID      = 0xFFFF_u16;	// 無効な logo_id
-		static constexpr uint16_t LOGO_VERSION_INVALID = 0xFFFF_u16;	// 無効な logo_version
-		static constexpr uint16_t DATA_ID_INVALID      = 0xFFFF_u16;	// 無効な download_data_id
+		static constexpr size_t MAX_LOGO_CHAR = 12; // 最大簡易ロゴ長
+		static constexpr uint16_t LOGO_ID_INVALID      = 0xFFFF_u16; // 無効な logo_id
+		static constexpr uint16_t LOGO_VERSION_INVALID = 0xFFFF_u16; // 無効な logo_version
+		static constexpr uint16_t DATA_ID_INVALID      = 0xFFFF_u16; // 無効な download_data_id
 
 		LogoTransmissionDescriptor() noexcept;
 
@@ -1319,7 +1319,7 @@ namespace LibISDB
 		uint8_t m_AdditionalBroadcastingID; /**< additional_broadcasting_identification */
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_DESCRIPTORS_H
+#endif // ifndef LIBISDB_DESCRIPTORS_H

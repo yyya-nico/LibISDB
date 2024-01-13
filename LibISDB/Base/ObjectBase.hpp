@@ -59,7 +59,7 @@ namespace LibISDB
 		Logger *m_pLogger;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_OBJECT_BASE_H
+#endif // ifndef LIBISDB_OBJECT_BASE_H

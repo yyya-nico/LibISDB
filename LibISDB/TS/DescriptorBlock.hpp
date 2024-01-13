@@ -77,7 +77,7 @@ namespace LibISDB
 		std::vector<std::unique_ptr<DescriptorBase>> m_DescriptorList;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_DESCRIPTOR_BLOCK_H
+#endif // ifndef LIBISDB_DESCRIPTOR_BLOCK_H

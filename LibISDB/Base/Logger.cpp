@@ -49,4 +49,4 @@ void Logger::LogRaw(LogType Type, const CharType *pText)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

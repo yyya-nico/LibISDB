@@ -222,7 +222,7 @@ namespace LibISDB
 		unsigned long long m_LastUpdatedTableUniqueID;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_SPI_TABLE_H
+#endif // ifndef LIBISDB_SPI_TABLE_H

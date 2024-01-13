@@ -837,7 +837,7 @@ namespace LibISDB::DirectShow
 		}
 	};
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow
 
 
-#endif	// ifndef LIBISDB_EVR_MEDIA_TYPE_H
+#endif // ifndef LIBISDB_EVR_MEDIA_TYPE_H

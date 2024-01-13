@@ -336,4 +336,4 @@ void CaptionFilter::OnPMTSection(const PSITableBase *pTable, const PSISection *p
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

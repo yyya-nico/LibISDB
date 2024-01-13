@@ -102,7 +102,7 @@ namespace LibISDB
 	int GetDayOfYear(int Year, int Month, int Day);
 	int GetDayOfWeek(int Year, int Month, int Day);
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_DATE_TIME_H
+#endif // ifndef LIBISDB_DATE_TIME_H

@@ -347,4 +347,4 @@ CRC32MPEG2::ValueType CRC32MPEG2::Calc(const uint8_t *pData, size_t DataSize, Va
 #endif
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

@@ -393,4 +393,4 @@ bool StreamSourceFilter::HasPendingRequest()
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

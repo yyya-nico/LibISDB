@@ -126,7 +126,7 @@ bool DownloadInfoIndicationParser::ParseData(const uint8_t *pData, uint16_t Data
 	Message.TransactionID          = Load32(&pData[4]);
 
 	const uint8_t AdaptationLength = pData[9];
-//	const uint16_t MessageLength   = Load16(&pData[10]);
+	//const uint16_t MessageLength   = Load16(&pData[10]);
 	if (12 + static_cast<uint16_t>(AdaptationLength) > DataSize)
 		return false;
 	uint16_t Pos = 12 + AdaptationLength;
@@ -178,12 +178,12 @@ bool DownloadInfoIndicationParser::ParseData(const uint8_t *pData, uint16_t Data
 				break;
 
 			switch (DescTag) {
-			case 0x02:	// Name descriptor
+			case 0x02: // Name descriptor
 				Module.ModuleDesc.Name.Length = DescLength;
 				Module.ModuleDesc.Name.pText = reinterpret_cast<const char *>(&pData[Pos + DescPos]);
 				break;
 
-			case 0x05:	// CRC32 descriptor
+			case 0x05: // CRC32 descriptor
 				if (DescLength == 4) {
 					Module.ModuleDesc.CRC.IsValid = true;
 					Module.ModuleDesc.CRC.CRC32 = Load32(&pData[Pos + DescPos]);
@@ -225,7 +225,7 @@ bool DownloadDataBlockParser::ParseData(const uint8_t *pData, uint16_t DataSize)
 	DataBlock.DownloadID           = Load32(&pData[4]);
 
 	const uint8_t AdaptationLength = pData[9];
-//	const uint16_t MessageLength   = Load16(&pData[10]);
+	//const uint16_t MessageLength   = Load16(&pData[10]);
 	if (12 + static_cast<uint16_t>(AdaptationLength) + 6 >= DataSize)
 		return false;
 
@@ -245,4 +245,4 @@ bool DownloadDataBlockParser::ParseData(const uint8_t *pData, uint16_t DataSize)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

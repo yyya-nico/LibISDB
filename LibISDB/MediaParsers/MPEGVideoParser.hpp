@@ -57,7 +57,7 @@ namespace LibISDB
 
 	size_t EBSPToRBSP(uint8_t *pData, size_t DataSize);
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_MPEG_VIDEO_PARSER_H
+#endif // ifndef LIBISDB_MPEG_VIDEO_PARSER_H

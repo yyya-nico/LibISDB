@@ -285,7 +285,7 @@ namespace LibISDB
 		bool m_IsLocked;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_LOCK_H
+#endif // ifndef LIBISDB_LOCK_H

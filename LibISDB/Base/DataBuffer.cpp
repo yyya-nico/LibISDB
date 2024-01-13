@@ -309,4 +309,4 @@ void * DataBuffer::ReAllocate(void *pBuffer, size_t Size)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

@@ -346,4 +346,4 @@ bool PSISectionParser::StorePayload(const uint8_t *pData, uint8_t *pRemain)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

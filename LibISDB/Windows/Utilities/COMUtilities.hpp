@@ -218,7 +218,7 @@ namespace LibISDB
 
 	template<typename T = BYTE> using COMMemoryPointer = std::unique_ptr<T, COMMemoryDeleter>;
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_COM_UTILITIES_H
+#endif // ifndef LIBISDB_COM_UTILITIES_H

@@ -163,4 +163,4 @@ size_t EBSPToRBSP(uint8_t *pData, size_t DataSize)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

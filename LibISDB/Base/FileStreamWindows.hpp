@@ -75,10 +75,10 @@ namespace LibISDB
 		bool m_IsPreallocationFailed;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// LIBISDB_WINDOWS
+#endif // LIBISDB_WINDOWS
 
 
-#endif	// ifndef LIBISDB_FILE_STREAM_WINDOWS_H
+#endif // ifndef LIBISDB_FILE_STREAM_WINDOWS_H

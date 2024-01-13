@@ -144,4 +144,4 @@ uint16_t PIDMapManager::GetMapCount() const
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

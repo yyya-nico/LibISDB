@@ -182,4 +182,4 @@ void FilterGraph::DestroyGraphBuilder()
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

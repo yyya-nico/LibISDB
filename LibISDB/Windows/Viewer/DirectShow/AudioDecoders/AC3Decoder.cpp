@@ -58,7 +58,7 @@ constexpr int16_t SampleToInt16(float Sample)
 	return static_cast<int16_t>(i - 0x43C00000);
 }
 
-}	// namespace
+} // namespace
 
 
 
@@ -138,7 +138,7 @@ bool AC3Decoder::GetSPDIFFrameInfo(ReturnArg<SPDIFFrameInfo> Info) const
 	if (!Info || (m_FrameLength == 0))
 		return false;
 
-	Info->Pc = 0x0001_u16;	// AC-3
+	Info->Pc = 0x0001_u16; // AC-3
 	Info->FrameSize = m_FrameLength;
 	Info->SamplesPerFrame = 256 * 6;
 
@@ -431,4 +431,4 @@ bool AC3Decoder::DecodeFrame(const uint8_t *pData, size_t *pDataSize, ReturnArg<
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

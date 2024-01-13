@@ -1514,4 +1514,4 @@ uint64_t PCRTable::GetPCRTimeStamp() const
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

@@ -1438,4 +1438,4 @@ bool EPGDatabase::ScheduleInfo::OnSection(const EITTable *pTable, int Hour)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

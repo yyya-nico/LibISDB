@@ -82,7 +82,7 @@ namespace LibISDB::DirectShow
 #endif
 	};
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow
 
 
-#endif	// ifndef LIBISDB_VIDEO_RENDERER_EVR_H
+#endif // ifndef LIBISDB_VIDEO_RENDERER_EVR_H

@@ -282,4 +282,4 @@ bool KnownDecoderManager::GetModulePath(LPTSTR pszPath)
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

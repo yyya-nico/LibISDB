@@ -159,7 +159,7 @@ namespace LibISDB
 		H264AccessUnit m_AccessUnit;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_H264_PARSER_H
+#endif // ifndef LIBISDB_H264_PARSER_H

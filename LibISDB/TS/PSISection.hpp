@@ -112,7 +112,7 @@ namespace LibISDB
 		unsigned long m_CRCErrorCount;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_SPI_SECTION_H
+#endif // ifndef LIBISDB_SPI_SECTION_H

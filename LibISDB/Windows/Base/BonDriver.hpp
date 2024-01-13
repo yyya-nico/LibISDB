@@ -140,7 +140,7 @@ namespace LibISDB
 		bool m_IsOpen;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_BON_DRIVER_H
+#endif // ifndef LIBISDB_BON_DRIVER_H

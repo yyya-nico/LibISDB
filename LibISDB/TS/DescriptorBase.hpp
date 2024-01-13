@@ -83,7 +83,7 @@ namespace LibISDB
 		}
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_DESCRIPTOR_BASE_H
+#endif // ifndef LIBISDB_DESCRIPTOR_BASE_H

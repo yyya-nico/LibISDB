@@ -53,4 +53,4 @@
 #endif
 
 
-#endif	// ifndef LIBISDB_VERSION_H
+#endif // ifndef LIBISDB_VERSION_H

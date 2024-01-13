@@ -261,4 +261,4 @@ bool AACDecoder_FAAD2::DecodeFrame(const ADTSFrame *pFrame, ReturnArg<DecodeFram
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

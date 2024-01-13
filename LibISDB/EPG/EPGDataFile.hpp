@@ -104,7 +104,7 @@ namespace LibISDB
 		EventInfo::SourceIDType m_SourceID;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_EPG_DATA_FILE_H
+#endif // ifndef LIBISDB_EPG_DATA_FILE_H

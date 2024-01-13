@@ -88,7 +88,7 @@ namespace LibISDB
 		SizeType m_WriteSize;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_STREAM_WRITER_H
+#endif // ifndef LIBISDB_STREAM_WRITER_H

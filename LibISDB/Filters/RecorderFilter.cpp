@@ -577,4 +577,4 @@ void RecorderFilter::TaskEventListener::OnWriteError(RecordingTaskImpl *pTask)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

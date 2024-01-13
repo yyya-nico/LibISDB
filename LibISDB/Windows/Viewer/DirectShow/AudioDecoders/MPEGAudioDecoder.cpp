@@ -50,7 +50,7 @@ constexpr int16_t FixedToInt16(mad_fixed_t Value)
 	return static_cast<int16_t>(Value >> (MAD_F_FRACBITS + 1 - 16));
 }
 
-}	// namespace
+} // namespace
 
 
 
@@ -235,4 +235,4 @@ bool MPEGAudioDecoder::DecodeFrame(const uint8_t *pData, size_t *pDataSize, Retu
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

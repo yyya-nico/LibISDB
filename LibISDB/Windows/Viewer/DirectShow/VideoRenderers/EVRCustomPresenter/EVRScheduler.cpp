@@ -359,4 +359,4 @@ unsigned int EVRScheduler::SchedulerThread()
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

@@ -701,4 +701,4 @@ HRESULT EVRPresentEngine::UpdateDestRect()
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

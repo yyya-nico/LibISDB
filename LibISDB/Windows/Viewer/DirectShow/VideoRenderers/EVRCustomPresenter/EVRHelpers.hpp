@@ -514,7 +514,7 @@ namespace LibISDB::DirectShow
 		size_t m_PendingCount;
 	};
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow
 
 
-#endif	// ifndef LIBISDB_EVR_HELPERS_H
+#endif // ifndef LIBISDB_EVR_HELPERS_H

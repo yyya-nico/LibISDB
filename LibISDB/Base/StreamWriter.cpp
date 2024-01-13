@@ -163,4 +163,4 @@ FileStream * FileStreamWriter::OpenFile(const String &FileName, OpenFlag Flags)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

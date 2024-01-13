@@ -222,4 +222,4 @@ size_t StringVFormatArgs(
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

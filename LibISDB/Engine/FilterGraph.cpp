@@ -298,4 +298,4 @@ const FilterGraph::FilterInfo * FilterGraph::GetFilterInfoByTypeID(const std::ty
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

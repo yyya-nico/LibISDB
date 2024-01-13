@@ -143,10 +143,10 @@ private:
 static CPUIdentify g_CPUIdentify;
 
 
-#endif	// defined(LIBISDB_X86) || defined(LIBISDB_X64)
+#endif // defined(LIBISDB_X86) || defined(LIBISDB_X64)
 
 
-}	// namespace
+} // namespace
 
 
 
@@ -174,7 +174,7 @@ void SetSSE2Enabled(bool Enabled) noexcept
 }
 
 
-#endif	// defined(LIBISDB_X86) || defined(LIBISDB_X64)
+#endif // defined(LIBISDB_X86) || defined(LIBISDB_X64)
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

@@ -159,7 +159,7 @@ namespace LibISDB
 	constexpr uint32_t LANGUAGE_CODE_ETC     = 0x657463_u32; // その他
 	constexpr uint32_t LANGUAGE_CODE_INVALID = 0x000000_u32; // 無効
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_CONSTS_H
+#endif // ifndef LIBISDB_CONSTS_H

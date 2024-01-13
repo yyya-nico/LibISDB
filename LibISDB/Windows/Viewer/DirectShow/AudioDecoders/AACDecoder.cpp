@@ -107,7 +107,7 @@ bool AACDecoder::GetSPDIFFrameInfo(ReturnArg<SPDIFFrameInfo> Info) const
 	if (!Info || (m_pADTSFrame == nullptr))
 		return false;
 
-	Info->Pc = 0x0007_u16;	// MPEG-2 AAC ADTS
+	Info->Pc = 0x0007_u16; // MPEG-2 AAC ADTS
 	Info->FrameSize = m_pADTSFrame->GetFrameLength();
 	Info->SamplesPerFrame = 1024;
 
@@ -153,4 +153,4 @@ bool AACDecoder::ResetDecoder()
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

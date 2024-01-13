@@ -104,7 +104,7 @@ namespace LibISDB
 		mutable MutexLock m_Lock;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_EVENT_LISTENER_H
+#endif // ifndef LIBISDB_EVENT_LISTENER_H

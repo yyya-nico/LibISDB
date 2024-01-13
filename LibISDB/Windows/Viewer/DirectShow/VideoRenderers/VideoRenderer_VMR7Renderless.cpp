@@ -529,4 +529,4 @@ void VideoRenderer_VMR7Renderless::ReleaseSurfaces()
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

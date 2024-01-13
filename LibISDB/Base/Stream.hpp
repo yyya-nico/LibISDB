@@ -109,7 +109,7 @@ namespace LibISDB
 		String m_FileName;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_STREAM_H
+#endif // ifndef LIBISDB_STREAM_H

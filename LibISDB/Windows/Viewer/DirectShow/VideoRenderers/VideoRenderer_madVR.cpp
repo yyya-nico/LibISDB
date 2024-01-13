@@ -110,4 +110,4 @@ HWND VideoRenderer_madVR::FindVideoWindow()
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

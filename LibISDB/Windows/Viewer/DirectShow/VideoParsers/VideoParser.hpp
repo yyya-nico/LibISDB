@@ -131,7 +131,7 @@ namespace LibISDB::DirectShow
 		bool m_AttachMediaType;
 	};
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow
 
 
-#endif	// ifndef LIBISDB_VIDEO_PARSER_H
+#endif // ifndef LIBISDB_VIDEO_PARSER_H

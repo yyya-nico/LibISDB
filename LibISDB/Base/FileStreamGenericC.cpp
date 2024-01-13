@@ -318,4 +318,4 @@ bool FileStreamGenericC::IsEnd() const
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

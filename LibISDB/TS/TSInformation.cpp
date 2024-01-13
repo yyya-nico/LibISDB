@@ -313,4 +313,4 @@ bool LanguageCodeToText(
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

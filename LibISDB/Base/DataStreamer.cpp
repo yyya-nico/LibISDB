@@ -416,4 +416,4 @@ bool DataStreamer::ProcessStream()
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

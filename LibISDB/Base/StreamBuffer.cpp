@@ -726,4 +726,4 @@ void StreamBuffer::SequentialReader::ResetPos()
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

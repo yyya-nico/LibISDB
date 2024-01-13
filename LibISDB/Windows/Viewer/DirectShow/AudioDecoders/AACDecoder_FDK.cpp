@@ -247,7 +247,7 @@ bool AACDecoder_FDK::DecodeFrame(const ADTSFrame *pFrame, ReturnArg<DecodeFrameI
 }
 
 
-#endif	// LIBISDB_HAS_FDK_AAC
+#endif // LIBISDB_HAS_FDK_AAC
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

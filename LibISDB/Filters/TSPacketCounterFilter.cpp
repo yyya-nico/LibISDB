@@ -278,4 +278,4 @@ bool TSPacketCounterFilter::ESPIDMapTarget::StorePacket(const TSPacket *pPacket)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

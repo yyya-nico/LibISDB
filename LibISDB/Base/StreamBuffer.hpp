@@ -159,7 +159,7 @@ namespace LibISDB
 		std::map<Reader *, PosType> m_ReaderPosList;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_STREAM_BUFFER_H
+#endif // ifndef LIBISDB_STREAM_BUFFER_H

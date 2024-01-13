@@ -319,7 +319,7 @@ namespace LibISDB
 		bool GetEventComponentGroupInfo(int ServiceIndex, int GroupIndex, ReturnArg<EventComponentGroupInfo> Info, bool Next = false) const;
 		bool GetEventComponentGroupList(int ServiceIndex, ReturnArg<EventComponentGroupList> List, bool Next = false) const;
 		int GetEventComponentGroupIndexByComponentTag(int ServiceIndex, uint8_t ComponentTag, bool Next = false) const;
-#endif	// LIBISDB_ANALYZER_FILTER_EIT_SUPPORT
+#endif // LIBISDB_ANALYZER_FILTER_EIT_SUPPORT
 
 		bool GetTOTTime(ReturnArg<DateTime> Time) const;
 		bool GetInterpolatedTOTTime(ReturnArg<DateTime> Time, OptionalReturnArg<bool> Interpolated = std::nullopt) const;
@@ -407,7 +407,7 @@ namespace LibISDB
 		void OnTOTSection(const PSITableBase *pTable, const PSISection *pSection);
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_ANALYZER_FILTER_H
+#endif // ifndef LIBISDB_ANALYZER_FILTER_H

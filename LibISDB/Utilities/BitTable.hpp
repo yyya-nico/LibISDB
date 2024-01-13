@@ -142,7 +142,7 @@ namespace LibISDB
 		std::unique_ptr<uint8_t[]> m_Table;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_BIT_TABLE_H
+#endif // ifndef LIBISDB_BIT_TABLE_H

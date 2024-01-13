@@ -224,7 +224,7 @@ namespace LibISDB
 		static size_t UTF8ToCodePoint(const uint8_t *pData, size_t Length, uint32_t *pCodePoint);
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_ARIB_STRING_H
+#endif // ifndef LIBISDB_ARIB_STRING_H

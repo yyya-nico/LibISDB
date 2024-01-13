@@ -355,4 +355,4 @@ void BonDriver::PurgeTsStream()
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

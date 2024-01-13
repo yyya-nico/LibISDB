@@ -61,7 +61,7 @@ namespace LibISDB
 		std::chrono::milliseconds m_StreamingThreadIdleWait;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_THREAD_H
+#endif // ifndef LIBISDB_THREAD_H

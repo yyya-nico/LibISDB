@@ -140,7 +140,7 @@ namespace LibISDB
 		const FilterInfo * GetFilterInfoByTypeID(const std::type_info &Type) const;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_FILTER_GRAPH_H
+#endif // ifndef LIBISDB_FILTER_GRAPH_H

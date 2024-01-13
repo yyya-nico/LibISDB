@@ -188,7 +188,7 @@ void DateTime::FromSYSTEMTIME(const ::SYSTEMTIME &Src) noexcept
 }
 
 
-#endif	// LIBISDB_WINDOWS
+#endif // LIBISDB_WINDOWS
 
 
 void DateTime::Reset() noexcept
@@ -242,7 +242,7 @@ bool DateTime::OffsetSeconds(long Seconds) noexcept
 
 	return OffsetMilliseconds(static_cast<long long>(Seconds) * 1000LL);
 
-#else	// LIBISDB_WINDOWS
+#else // LIBISDB_WINDOWS
 
 	std::tm Tm = ToTm();
 	std::time_t Time = ::timegm(&Tm);
@@ -259,7 +259,7 @@ bool DateTime::OffsetSeconds(long Seconds) noexcept
 
 	return true;
 
-#endif	// !def LIBISDB_WINDOWS
+#endif // !def LIBISDB_WINDOWS
 }
 
 
@@ -288,7 +288,7 @@ bool DateTime::OffsetMilliseconds(long long Milliseconds) noexcept
 
 	return true;
 
-#else	// LIBISDB_WINDOWS
+#else // LIBISDB_WINDOWS
 
 	const long long Seconds = Milliseconds / 1000LL;
 
@@ -298,7 +298,7 @@ bool DateTime::OffsetMilliseconds(long long Milliseconds) noexcept
 
 	return OffsetSeconds(static_cast<long>(Seconds));
 
-#endif	// !def LIBISDB_WINDOWS
+#endif // !def LIBISDB_WINDOWS
 }
 
 
@@ -314,7 +314,7 @@ unsigned long long DateTime::GetLinearSeconds() const noexcept
 
 	return GetLinearMilliseconds() / 1000ULL;
 
-#else	// LIBISDB_WINDOWS
+#else // LIBISDB_WINDOWS
 
 	std::tm Tm = ToTm();
 	std::time_t Time = ::timegm(&Tm);
@@ -324,7 +324,7 @@ unsigned long long DateTime::GetLinearSeconds() const noexcept
 
 	return Time;
 
-#endif	// !def LIBISDB_WINDOWS
+#endif // !def LIBISDB_WINDOWS
 }
 
 
@@ -341,11 +341,11 @@ unsigned long long DateTime::GetLinearMilliseconds() const noexcept
 	return ((static_cast<unsigned long long>(ft.dwHighDateTime) << 32) |
 	         static_cast<unsigned long long>(ft.dwLowDateTime)) / 10000ULL;
 
-#else	// LIBISDB_WINDOWS
+#else // LIBISDB_WINDOWS
 
 	return GetLinearSeconds() * 1000ULL + Millisecond;
 
-#endif	// !def LIBISDB_WINDOWS
+#endif // !def LIBISDB_WINDOWS
 }
 
 
@@ -355,7 +355,7 @@ bool DateTime::FromLinearSeconds(unsigned long long Seconds) noexcept
 
 	return FromLinearMilliseconds(Seconds * 1000ULL);
 
-#else	// LIBISDB_WINDOWS
+#else // LIBISDB_WINDOWS
 
 	const std::time_t Time = Seconds;
 	std::tm Tm;
@@ -367,7 +367,7 @@ bool DateTime::FromLinearSeconds(unsigned long long Seconds) noexcept
 
 	return true;
 
-#endif	// !def LIBISDB_WINDOWS
+#endif // !def LIBISDB_WINDOWS
 }
 
 
@@ -389,7 +389,7 @@ bool DateTime::FromLinearMilliseconds(unsigned long long Milliseconds) noexcept
 
 	return true;
 
-#else	// LIBISDB_WINDOWS
+#else // LIBISDB_WINDOWS
 
 	if (!FromLinearSeconds(Milliseconds / 1000ULL))
 		return false;
@@ -398,7 +398,7 @@ bool DateTime::FromLinearMilliseconds(unsigned long long Milliseconds) noexcept
 
 	return true;
 
-#endif	// !def LIBISDB_WINDOWS
+#endif // !def LIBISDB_WINDOWS
 }
 
 
@@ -413,7 +413,7 @@ bool DateTime::NowLocal() noexcept
 
 	return true;
 
-#else	// LIBISDB_WINDOWS
+#else // LIBISDB_WINDOWS
 
 	std::time_t Time = std::time(nullptr);
 	if (Time == static_cast<std::time_t>(-1))
@@ -427,7 +427,7 @@ bool DateTime::NowLocal() noexcept
 
 	return true;
 
-#endif	// !def LIBISDB_WINDOWS
+#endif // !def LIBISDB_WINDOWS
 }
 
 
@@ -442,7 +442,7 @@ bool DateTime::NowUTC() noexcept
 
 	return true;
 
-#else	// LIBISDB_WINDOWS
+#else // LIBISDB_WINDOWS
 
 	std::time_t Time = std::time(nullptr);
 	if (Time == static_cast<std::time_t>(-1))
@@ -456,7 +456,7 @@ bool DateTime::NowUTC() noexcept
 
 	return true;
 
-#endif	// !def LIBISDB_WINDOWS
+#endif // !def LIBISDB_WINDOWS
 }
 
 
@@ -474,7 +474,7 @@ bool DateTime::ToLocal() noexcept
 
 	return true;
 
-#else	// LIBISDB_WINDOWS
+#else // LIBISDB_WINDOWS
 
 	std::tm Tm = ToTm();
 	const std::time_t Time = ::timegm(&Tm);
@@ -488,7 +488,7 @@ bool DateTime::ToLocal() noexcept
 
 	return true;
 
-#endif	// !def LIBISDB_WINDOWS
+#endif // !def LIBISDB_WINDOWS
 }
 
 
@@ -529,4 +529,4 @@ void DateTime::TruncateToDays() noexcept
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

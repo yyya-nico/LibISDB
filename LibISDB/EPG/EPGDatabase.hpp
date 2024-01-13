@@ -282,7 +282,7 @@ namespace LibISDB
 		static bool RemoveEvent(EventMapType &Map, uint16_t EventID);
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_EPG_DATABASE_H
+#endif // ifndef LIBISDB_EPG_DATABASE_H

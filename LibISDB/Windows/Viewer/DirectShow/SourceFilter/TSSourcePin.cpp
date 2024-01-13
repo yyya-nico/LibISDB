@@ -337,4 +337,4 @@ bool TSSourcePin::ProcessStream()
 }
 
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow

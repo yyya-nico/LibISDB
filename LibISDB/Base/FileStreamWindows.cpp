@@ -460,7 +460,7 @@ bool FileStreamWindows::GetTime(FILETIME *pCreationTime, FILETIME *pLastAccessTi
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// LIBISDB_WINDOWS
+#endif // LIBISDB_WINDOWS

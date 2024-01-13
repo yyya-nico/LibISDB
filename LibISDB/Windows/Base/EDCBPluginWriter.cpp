@@ -249,4 +249,4 @@ std::string EDCBPluginWriter::ErrorCategory::message(int ev) const
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

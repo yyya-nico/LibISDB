@@ -496,4 +496,4 @@ bool PSITableSet::OnPSISection(const PSISectionParser *pSectionParser, const PSI
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

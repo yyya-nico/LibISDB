@@ -177,4 +177,4 @@ MD5Value CalcMD5(const uint8_t *pData, size_t DataSize) noexcept
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

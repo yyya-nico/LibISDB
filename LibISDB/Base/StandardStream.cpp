@@ -94,4 +94,4 @@ FileStreamBase * OpenFileStream(const String &Name, FileStreamBase::OpenFlag Ope
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

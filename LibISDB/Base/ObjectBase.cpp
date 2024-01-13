@@ -61,4 +61,4 @@ void ObjectBase::LogRaw(Logger::LogType Type, const CharType *pText)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

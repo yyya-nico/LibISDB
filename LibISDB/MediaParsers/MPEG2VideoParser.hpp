@@ -130,7 +130,7 @@ namespace LibISDB
 		MPEG2Sequence m_MPEG2Sequence;
 	};
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_MPEG2_VIDEO_PARSER_H
+#endif // ifndef LIBISDB_MPEG2_VIDEO_PARSER_H

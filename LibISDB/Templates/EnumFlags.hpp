@@ -51,7 +51,7 @@ namespace LibISDB
 			requires !EnumFlags<T>;
 		};
 
-	}	// namespace Concept
+	} // namespace Concept
 
 	inline namespace EnumFlags
 	{
@@ -101,9 +101,9 @@ namespace LibISDB
 			return !static_cast<std::underlying_type_t<T>>(rhs);
 		}
 
-	}	// namespace EnumFlags
+	} // namespace EnumFlags
 
-}	// namespace LibISDB
+} // namespace LibISDB
 
 
-#endif	// ifndef LIBISDB_ENUM_FLAGS_H
+#endif // ifndef LIBISDB_ENUM_FLAGS_H

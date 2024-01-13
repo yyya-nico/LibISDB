@@ -77,12 +77,12 @@ ssize_t posix_write(int fd, const void *buffer, std::size_t count)
 	return ::_write(fd, buffer, static_cast<unsigned int>(count));
 }
 
-#else	// LIBISDB_WINDOWS
+#else // LIBISDB_WINDOWS
 
 #ifdef LIBISDB_MACOS
 typedef off_t off64_t;
 inline off64_t lseek64(int fd, off64_t offset, int origin) { return ::lseek(fd, offset, origin); }
-#endif	// LIBISDB_MACOS
+#endif // LIBISDB_MACOS
 
 inline int posix_close(int fd) { return ::close(fd); }
 inline ::off64_t tell64(int fd) { return ::lseek64(fd, 0, SEEK_CUR); }
@@ -100,9 +100,9 @@ inline ::off64_t tell64(int fd) { return ::lseek64(fd, 0, SEEK_CUR); }
 inline ::ssize_t posix_read(int fd, void *buffer, std::size_t count) { return ::read(fd, buffer, count); }
 inline ::ssize_t posix_write(int fd, const void *buffer, std::size_t count) { return ::write(fd, buffer, count); }
 
-#endif	// ndef LIBISDB_WINDOWS
+#endif // ndef LIBISDB_WINDOWS
 
-}	// namespace
+} // namespace
 
 
 namespace LibISDB
@@ -201,7 +201,7 @@ bool FileStreamPOSIX::Open(const String &FileName, OpenFlag Flags)
 		return false;
 	}
 
-#else	// LIBISDB_WINDOWS
+#else // LIBISDB_WINDOWS
 
 	int OFlags;
 
@@ -234,7 +234,7 @@ bool FileStreamPOSIX::Open(const String &FileName, OpenFlag Flags)
 		return false;
 	}
 
-#endif	// ndef LIBISDB_WINDOWS
+#endif // ndef LIBISDB_WINDOWS
 
 	m_FileName = FileName;
 	m_EOF = false;
@@ -385,4 +385,4 @@ void FileStreamPOSIX::DefaultCloser::operator () (int fd) const
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

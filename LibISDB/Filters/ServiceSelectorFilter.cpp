@@ -112,4 +112,4 @@ void ServiceSelectorFilter::SetFollowActiveService(bool Follow)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

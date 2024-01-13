@@ -95,7 +95,7 @@ bool PESPacket::ParseHeader()
 	if (m_DataSize < 6)
 		return false;
 	if ((m_pData[0] != 0x00) || (m_pData[1] != 0x00) || (m_pData[2] != 0x01))
-		return false;	// packet_start_code_prefix 異常
+		return false; // packet_start_code_prefix 異常
 
 	m_Header.StreamID     = m_pData[3];
 	m_Header.PacketLength = Load16(&m_pData[4]);
@@ -104,7 +104,7 @@ bool PESPacket::ParseHeader()
 		if (m_DataSize < 9)
 			return false;
 		if ((m_pData[6] & 0xC0) != 0x80)
-			return false;	// 固定ビット異常
+			return false; // 固定ビット異常
 
 		m_Header.ScramblingControl      = (m_pData[6] & 0x30) >> 4;
 		m_Header.Priority               = (m_pData[6] & 0x08) != 0;
@@ -121,9 +121,9 @@ bool PESPacket::ParseHeader()
 		m_Header.HeaderDataLength       = m_pData[8];
 
 		if (m_Header.ScramblingControl != 0)
-			return false;	// Not scrambled のみ対応
+			return false; // Not scrambled のみ対応
 		if (m_Header.PTSDTSFlags == 1)
-			return false;	// 未定義のフラグ
+			return false; // 未定義のフラグ
 	}
 
 	return true;
@@ -316,4 +316,4 @@ uint8_t PESParser::StorePayload(const uint8_t *pPayload, uint8_t Remain)
 }
 
 
-}	// namespace LibISDB
+} // namespace LibISDB

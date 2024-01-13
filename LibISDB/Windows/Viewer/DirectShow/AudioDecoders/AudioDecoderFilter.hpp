@@ -234,7 +234,7 @@ namespace LibISDB::DirectShow
 		SampleCallback *m_pSampleCallback;
 	};
 
-}	// namespace LibISDB::DirectShow
+} // namespace LibISDB::DirectShow
 
 
-#endif	// ifndef LIBISDB_AUDIO_DECODER_FILTER_H
+#endif // ifndef LIBISDB_AUDIO_DECODER_FILTER_H
