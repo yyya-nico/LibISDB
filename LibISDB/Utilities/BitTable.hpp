@@ -63,6 +63,7 @@ namespace LibISDB
 		{
 			if (&rhs != this) {
 				SetSize(rhs.m_Size);
+				m_Bits = rhs.m_Bits;
 				if (m_Table)
 					std::memcpy(m_Table.get(), rhs.m_Table.get(), (m_Size + 7) >> 3);
 			}
