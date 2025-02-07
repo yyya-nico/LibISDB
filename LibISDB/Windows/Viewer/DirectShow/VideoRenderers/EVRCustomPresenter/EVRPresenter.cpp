@@ -772,7 +772,7 @@ HRESULT EVRPresenter::GetVideoWindow(HWND* phwndVideo)
 
 HRESULT EVRPresenter::GetNativeVideoSize(SIZE *pszVideo, SIZE *pszARVideo)
 {
-	if ((pszVideo == nullptr) || (pszARVideo == nullptr)) {
+	if ((pszVideo == nullptr) && (pszARVideo == nullptr)) {
 		return E_POINTER;
 	}
 
