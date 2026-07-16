@@ -54,6 +54,7 @@ namespace LibISDB
 	constexpr uint16_t PID_SDT     = 0x0011_u16; // SDT
 	constexpr uint16_t PID_HEIT    = 0x0012_u16; // H-EIT
 	constexpr uint16_t PID_TOT     = 0x0014_u16; // TOT
+	constexpr uint16_t PID_SIT     = 0x001F_u16; // SIT
 	constexpr uint16_t PID_SDTT    = 0x0023_u16; // SDTT
 	constexpr uint16_t PID_BIT     = 0x0024_u16; // BIT
 	constexpr uint16_t PID_NBIT    = 0x0025_u16; // NBIT

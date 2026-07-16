@@ -317,6 +317,8 @@ namespace LibISDB
 #ifdef LIBISDB_ANALYZER_FILTER_L_EIT_SUPPORT
 		const DescriptorBlock * GetLEITItemDesc(int ServiceIndex, bool Next = false) const;
 #endif
+		const SITTable::ServiceInfo * GetSITServiceInfoByID(uint16_t ServiceID) const;
+		const DescriptorBlock * GetSITItemDesc(int ServiceIndex) const;
 		const DescriptorBlock * GetExtendedEventDescriptor(int ServiceIndex, bool UseEventGroup, bool Next) const;
 		const ComponentDescriptor * GetComponentDescByComponentTag(const DescriptorBlock *pDescBlock, uint8_t ComponentTag) const;
 		const AudioComponentDescriptor * GetAudioComponentDescByComponentTag(const DescriptorBlock *pDescBlock, uint8_t ComponentTag) const;
@@ -374,6 +376,8 @@ namespace LibISDB
 		void OnPMTSection(const PSITableBase *pTable, const PSISection *pSection);
 		void OnSDTSection(const PSITableBase *pTable, const PSISection *pSection);
 		void OnNITSection(const PSITableBase *pTable, const PSISection *pSection);
+		void OnSITSection(const PSITableBase *pTable, const PSISection *pSection);
+		void OnBITSection(const PSITableBase *pTable, const PSISection *pSection);
 #ifdef LIBISDB_ANALYZER_FILTER_EIT_SUPPORT
 		void OnEITSection(const PSITableBase *pTable, const PSISection *pSection);
 #endif
