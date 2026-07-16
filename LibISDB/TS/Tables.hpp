@@ -363,6 +363,44 @@ namespace LibISDB
 			uint16_t NetworkID, uint16_t TransportStreamID, uint16_t ServiceID);
 	};
 
+	/** SIT テーブルクラス */
+	class SITTable
+		: public PSISingleTable
+	{
+	public:
+		struct ServiceInfo {
+			uint16_t ServiceID;
+			uint8_t RunningStatus;
+			bool FreeCAMode;
+			bool EventTimeValid;
+			DateTime EventStartTime;
+			uint32_t EventDuration;
+			DescriptorBlock Descriptors;
+		};
+
+		static constexpr uint8_t TABLE_ID = 0x7F_u8;
+
+		SITTable();
+
+	// PSISingleTable
+		void Reset() override;
+
+	// SITTable
+		uint16_t GetNetworkID() const;
+		const DescriptorBlock * GetTransmissionDescriptorBlock() const;
+		int GetServiceCount() const;
+		int GetServiceIndexByID(uint16_t ServiceID) const;
+		const ServiceInfo * GetServiceInfo(int Index) const;
+
+	protected:
+	// PSISingleTable
+		bool OnTableUpdate(const PSISection *pCurSection, const PSISection *pOldSection) override;
+
+		uint16_t m_NetworkID;
+		DescriptorBlock m_TransmissionDescriptors;
+		std::vector<ServiceInfo> m_ServiceList;
+	};
+
 	/** BIT テーブルクラス */
 	class BITTable
 		: public PSISingleTable

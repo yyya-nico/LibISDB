@@ -73,6 +73,8 @@ void AnalyzerFilter::Reset()
 	m_PIDMapManager.MapTarget(PID_NIT, PSITableBase::CreateWithHandler<NITMultiTable>(&AnalyzerFilter::OnNITSection, this));
 	// SDTテーブルPIDマップ追加
 	m_PIDMapManager.MapTarget(PID_SDT, PSITableBase::CreateWithHandler<SDTTableSet>(&AnalyzerFilter::OnSDTSection, this));
+	// SITテーブルPIDマップ追加
+	m_PIDMapManager.MapTarget(PID_SIT, PSITableBase::CreateWithHandler<SITTable>(&AnalyzerFilter::OnSITSection, this));
 	// BITテーブルPIDマップ追加
 	m_PIDMapManager.MapTarget(PID_BIT, PSITableBase::CreateWithHandler<BITMultiTable>(&AnalyzerFilter::OnBITSection, this));
 #ifdef LIBISDB_ANALYZER_FILTER_EIT_SUPPORT
@@ -882,6 +884,13 @@ uint16_t AnalyzerFilter::GetEventID(int ServiceIndex, bool Next) const
 		const EITTable *pEITTable = GetEITPfTableByServiceID(m_ServiceList[ServiceIndex].ServiceID, Next);
 		if (pEITTable != nullptr)
 			return pEITTable->GetEventID();
+
+		if (!Next) {
+			const SITTable::ServiceInfo *pSITService =
+				GetSITServiceInfoByID(m_ServiceList[ServiceIndex].ServiceID);
+			if (pSITService != nullptr)
+				return 1;
+		}
 	}
 
 	return EVENT_ID_INVALID;
@@ -904,6 +913,15 @@ bool AnalyzerFilter::GetEventStartTime(int ServiceIndex, ReturnArg<DateTime> Sta
 				return true;
 			}
 		}
+
+		if (!Next) {
+			const SITTable::ServiceInfo *pSITService =
+				GetSITServiceInfoByID(m_ServiceList[ServiceIndex].ServiceID);
+			if ((pSITService != nullptr) && pSITService->EventTimeValid) {
+				*StartTime = pSITService->EventStartTime;
+				return true;
+			}
+		}
 	}
 
 	return false;
@@ -918,6 +936,13 @@ uint32_t AnalyzerFilter::GetEventDuration(int ServiceIndex, bool Next) const
 		const EITTable *pEITTable = GetEITPfTableByServiceID(m_ServiceList[ServiceIndex].ServiceID, Next);
 		if (pEITTable != nullptr) {
 			return pEITTable->GetDuration();
+		}
+
+		if (!Next) {
+			const SITTable::ServiceInfo *pSITService =
+				GetSITServiceInfoByID(m_ServiceList[ServiceIndex].ServiceID);
+			if (pSITService != nullptr)
+				return pSITService->EventDuration;
 		}
 	}
 
@@ -940,6 +965,18 @@ bool AnalyzerFilter::GetEventTime(int ServiceIndex, OptionalReturnArg<DateTime> 
 			if (Duration)
 				*Duration = pEITTable->GetDuration();
 			return true;
+		}
+
+		if (!Next) {
+			const SITTable::ServiceInfo *pSITService =
+				GetSITServiceInfoByID(m_ServiceList[ServiceIndex].ServiceID);
+			if (pSITService != nullptr) {
+				if (Time && pSITService->EventTimeValid)
+					*Time = pSITService->EventStartTime;
+				if (Duration)
+					*Duration = pSITService->EventDuration;
+				return !Time || pSITService->EventTimeValid;
+			}
 		}
 	}
 
@@ -975,6 +1012,18 @@ bool AnalyzerFilter::GetEventName(int ServiceIndex, ReturnArg<String> Name, bool
 	}
 #endif
 
+	if (!Next) {
+		pDescBlock = GetSITItemDesc(ServiceIndex);
+		if (pDescBlock != nullptr) {
+			const ShortEventDescriptor *pShortEvent = pDescBlock->GetDescriptor<ShortEventDescriptor>();
+			if (pShortEvent != nullptr) {
+				ARIBString Str;
+				if (pShortEvent->GetEventName(&Str))
+					return m_StringDecoder.Decode(Str, Name);
+			}
+		}
+	}
+
 	return false;
 }
 
@@ -1006,6 +1055,18 @@ bool AnalyzerFilter::GetEventText(int ServiceIndex, ReturnArg<String> Text, bool
 		}
 	}
 #endif
+
+	if (!Next) {
+		pDescBlock = GetSITItemDesc(ServiceIndex);
+		if (pDescBlock != nullptr) {
+			const ShortEventDescriptor *pShortEvent = pDescBlock->GetDescriptor<ShortEventDescriptor>();
+			if (pShortEvent != nullptr) {
+				ARIBString Str;
+				if (pShortEvent->GetEventDescription(&Str))
+					return m_StringDecoder.Decode(Str, Text);
+			}
+		}
+	}
 
 	return false;
 }
@@ -1076,8 +1137,12 @@ bool AnalyzerFilter::GetEventExtendedText(int ServiceIndex, ReturnArg<String> Te
 	BlockLock Lock(m_FilterLock);
 
 	const DescriptorBlock *pDescBlock = GetExtendedEventDescriptor(ServiceIndex, UseEventGroup, Next);
-	if (pDescBlock == nullptr)
-		return false;
+	if (pDescBlock == nullptr) {
+		if (!Next)
+			pDescBlock = GetSITItemDesc(ServiceIndex);
+		if (pDescBlock == nullptr)
+			return false;
+	}
 
 	return LibISDB::GetEventExtendedText(pDescBlock, m_StringDecoder, ARIBStringDecoder::DecodeFlag::UseCharSize, Text);
 }
@@ -1093,8 +1158,12 @@ bool AnalyzerFilter::GetEventExtendedText(int ServiceIndex, ReturnArg<EventInfo:
 	BlockLock Lock(m_FilterLock);
 
 	const DescriptorBlock *pDescBlock = GetExtendedEventDescriptor(ServiceIndex, UseEventGroup, Next);
-	if (pDescBlock == nullptr)
-		return false;
+	if (pDescBlock == nullptr) {
+		if (!Next)
+			pDescBlock = GetSITItemDesc(ServiceIndex);
+		if (pDescBlock == nullptr)
+			return false;
+	}
 
 	return GetEventExtendedTextList(pDescBlock, m_StringDecoder, ARIBStringDecoder::DecodeFlag::UseCharSize, List);
 }
@@ -1210,6 +1279,8 @@ bool AnalyzerFilter::GetEventContentNibble(int ServiceIndex, ReturnArg<EventCont
 	BlockLock Lock(m_FilterLock);
 
 	const DescriptorBlock *pDescBlock = GetHEITItemDesc(ServiceIndex, Next);
+	if ((pDescBlock == nullptr) && !Next)
+		pDescBlock = GetSITItemDesc(ServiceIndex);
 
 	if (pDescBlock != nullptr) {
 		const ContentDescriptor *pContentDesc = pDescBlock->GetDescriptor<ContentDescriptor>();
@@ -1272,8 +1343,42 @@ bool AnalyzerFilter::GetEventInfo(int ServiceIndex, ReturnArg<EventInfo> Info, b
 
 	const EITTable *pEITTable =
 		GetEITPfTableByServiceID(m_ServiceList[ServiceIndex].ServiceID, Next);
-	if (pEITTable == nullptr)
-		return false;
+	if (pEITTable == nullptr) {
+		if (Next)
+			return false;
+
+		const SITTable::ServiceInfo *pSITService =
+			GetSITServiceInfoByID(m_ServiceList[ServiceIndex].ServiceID);
+		if (pSITService == nullptr)
+			return false;
+
+		Info->NetworkID = m_NetworkID;
+		Info->TransportStreamID = m_TransportStreamID;
+		Info->ServiceID = m_ServiceList[ServiceIndex].ServiceID;
+		Info->EventID = 1;
+		if (pSITService->EventTimeValid)
+			Info->StartTime = pSITService->EventStartTime;
+		else
+			Info->StartTime.Reset();
+		Info->Duration = pSITService->EventDuration;
+		Info->RunningStatus = pSITService->RunningStatus;
+		Info->FreeCAMode = pSITService->FreeCAMode;
+
+		if (!GetEventName(ServiceIndex, &Info->EventName, false))
+			Info->EventName.clear();
+		if (!GetEventText(ServiceIndex, &Info->EventText, false))
+			Info->EventText.clear();
+		if (!GetEventExtendedText(ServiceIndex, &Info->ExtendedText, false, false))
+			Info->ExtendedText.clear();
+
+		Info->VideoList.clear();
+		Info->AudioList.clear();
+		if (!GetEventContentNibble(ServiceIndex, &Info->ContentNibble, false))
+			Info->ContentNibble.NibbleCount = 0;
+
+		Info->Type = EventInfo::TypeFlag::Basic | EventInfo::TypeFlag::Extended | EventInfo::TypeFlag::Present;
+		return true;
+	}
 
 	Info->NetworkID = pEITTable->GetOriginalNetworkID();
 	Info->TransportStreamID = pEITTable->GetTransportStreamID();
@@ -1446,6 +1551,34 @@ const EITTable *AnalyzerFilter::GetEITPfTableByServiceID(uint16_t ServiceID, boo
 #endif
 
 	return nullptr;
+}
+
+
+const SITTable::ServiceInfo *AnalyzerFilter::GetSITServiceInfoByID(uint16_t ServiceID) const
+{
+	const SITTable *pSITTable = m_PIDMapManager.GetMapTarget<SITTable>(PID_SIT);
+	if (pSITTable == nullptr)
+		return nullptr;
+
+	const int Index = pSITTable->GetServiceIndexByID(ServiceID);
+	if (Index < 0)
+		return nullptr;
+
+	return pSITTable->GetServiceInfo(Index);
+}
+
+
+const DescriptorBlock *AnalyzerFilter::GetSITItemDesc(int ServiceIndex) const
+{
+	if (static_cast<unsigned int>(ServiceIndex) >= m_ServiceList.size())
+		return nullptr;
+
+	const SITTable::ServiceInfo *pSITService =
+		GetSITServiceInfoByID(m_ServiceList[ServiceIndex].ServiceID);
+	if (pSITService == nullptr)
+		return nullptr;
+
+	return &pSITService->Descriptors;
 }
 
 
@@ -2229,9 +2362,10 @@ void AnalyzerFilter::OnNITSection(const PSITableBase *pTable, const PSISection *
 	LIBISDB_TRACE(LIBISDB_STR("AnalyzerFilter::OnNITSection()\n"));
 
 	const NITMultiTable *pNITMultiTable = dynamic_cast<const NITMultiTable *>(pTable);
-	if (LIBISDB_TRACE_ERROR_IF(pNITMultiTable == nullptr)
-			|| !pNITMultiTable->IsNITComplete())
+	if (LIBISDB_TRACE_ERROR_IF(pNITMultiTable == nullptr))
 		return;
+
+	const bool NITComplete = pNITMultiTable->IsNITComplete();
 
 	const NITTable *pNITTable = pNITMultiTable->GetNITTable(0);
 	if (pNITTable == nullptr)
@@ -2262,6 +2396,10 @@ void AnalyzerFilter::OnNITSection(const PSITableBase *pTable, const PSISection *
 			}
 		}
 	}
+
+	// partial TS ではNIT全体が揃わないため、最低限のNID/NetworkNameはここで更新して終了する
+	if (!NITComplete)
+		return;
 
 	// TS リスト取得
 	m_NetworkStreamList.clear();
@@ -2320,6 +2458,67 @@ void AnalyzerFilter::OnNITSection(const PSITableBase *pTable, const PSISection *
 
 	m_FilterLock.Unlock();
 	m_EventListenerList.CallEventListener(&EventListener::OnNITUpdated, this);
+	m_FilterLock.Lock();
+}
+
+
+void AnalyzerFilter::OnSITSection(const PSITableBase *pTable, const PSISection *pSection)
+{
+	LIBISDB_TRACE(LIBISDB_STR("AnalyzerFilter::OnSITSection()\n"));
+
+	const SITTable *pSITTable = dynamic_cast<const SITTable *>(pTable);
+	if (LIBISDB_TRACE_ERROR_IF(pSITTable == nullptr))
+		return;
+
+	if (m_NetworkID == NETWORK_ID_INVALID)
+		m_NetworkID = pSITTable->GetNetworkID();
+
+	m_SDTServiceList.clear();
+
+	for (int i = 0; i < pSITTable->GetServiceCount(); i++) {
+		const SITTable::ServiceInfo *pService = pSITTable->GetServiceInfo(i);
+		if (pService == nullptr)
+			continue;
+
+		SDTServiceInfo &SDTInfo = m_SDTServiceList.emplace_back();
+		SDTInfo.ServiceID = pService->ServiceID;
+		SDTInfo.RunningStatus = pService->RunningStatus;
+		SDTInfo.FreeCAMode = pService->FreeCAMode;
+		SDTInfo.ProviderName.clear();
+		SDTInfo.ServiceName.clear();
+		SDTInfo.ServiceType = SERVICE_TYPE_INVALID;
+		SDTInfo.LogoID = LOGO_ID_INVALID;
+
+		const int ServiceIndex = GetServiceIndexByID(pService->ServiceID);
+
+		const ServiceDescriptor *pServiceDesc =
+			pService->Descriptors.GetDescriptor<ServiceDescriptor>();
+		if (pServiceDesc != nullptr) {
+			ARIBString Name;
+			SDTInfo.ServiceType = pServiceDesc->GetServiceType();
+			if (pServiceDesc->GetProviderName(&Name))
+				m_StringDecoder.Decode(Name, &SDTInfo.ProviderName);
+			if (pServiceDesc->GetServiceName(&Name))
+				m_StringDecoder.Decode(Name, &SDTInfo.ServiceName);
+		}
+
+		if (ServiceIndex >= 0) {
+			ServiceInfo &Service = m_ServiceList[ServiceIndex];
+			Service.RunningStatus = pService->RunningStatus;
+			Service.FreeCAMode = pService->FreeCAMode;
+			Service.ServiceType = SDTInfo.ServiceType;
+			Service.ProviderName = SDTInfo.ProviderName;
+			Service.ServiceName = SDTInfo.ServiceName;
+		}
+	}
+
+	m_SDTUpdated = true;
+
+	m_FilterLock.Unlock();
+	m_EventListenerList.CallEventListener(&EventListener::OnSDTUpdated, this);
+#ifdef LIBISDB_ANALYZER_FILTER_EIT_SUPPORT
+	m_EventListenerList.CallEventListener(&EventListener::OnEITUpdated, this);
+#endif
 	m_FilterLock.Lock();
 }
 

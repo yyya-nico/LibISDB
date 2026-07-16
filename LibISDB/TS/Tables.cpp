@@ -1027,6 +1027,141 @@ bool EITPfScheduleTable::ResetScheduleService(
 
 
 
+SITTable::SITTable()
+{
+	Reset();
+}
+
+
+void SITTable::Reset()
+{
+	PSISingleTable::Reset();
+
+	m_NetworkID = NETWORK_ID_INVALID;
+	m_TransmissionDescriptors.Reset();
+	m_ServiceList.clear();
+}
+
+
+uint16_t SITTable::GetNetworkID() const
+{
+	return m_NetworkID;
+}
+
+
+const DescriptorBlock * SITTable::GetTransmissionDescriptorBlock() const
+{
+	return &m_TransmissionDescriptors;
+}
+
+
+int SITTable::GetServiceCount() const
+{
+	return static_cast<int>(m_ServiceList.size());
+}
+
+
+int SITTable::GetServiceIndexByID(uint16_t ServiceID) const
+{
+	for (size_t i = 0; i < m_ServiceList.size(); i++) {
+		if (m_ServiceList[i].ServiceID == ServiceID)
+			return static_cast<int>(i);
+	}
+
+	return -1;
+}
+
+
+const SITTable::ServiceInfo * SITTable::GetServiceInfo(int Index) const
+{
+	if (static_cast<unsigned int>(Index) >= m_ServiceList.size())
+		return nullptr;
+
+	return &m_ServiceList[Index];
+}
+
+
+bool SITTable::OnTableUpdate(const PSISection *pCurSection, const PSISection *pOldSection)
+{
+	if (pCurSection->GetTableID() != TABLE_ID)
+		return false;
+
+	const uint16_t DataSize = pCurSection->GetPayloadSize();
+	const uint8_t *pData = pCurSection->GetPayloadData();
+
+	if (DataSize < 2)
+		return false;
+
+	m_NetworkID = pCurSection->GetTableIDExtension();
+	m_ServiceList.clear();
+
+	const uint16_t TransmissionInfoLoopLength = Load16(&pData[0]) & 0x0FFF;
+	size_t Pos = 2;
+	if (Pos + TransmissionInfoLoopLength > DataSize)
+		return false;
+
+	m_TransmissionDescriptors.Reset();
+	if (TransmissionInfoLoopLength > 0)
+		m_TransmissionDescriptors.ParseBlock(&pData[Pos], TransmissionInfoLoopLength);
+
+	for (size_t DescPos = 0; DescPos + 2 <= TransmissionInfoLoopLength;) {
+		const uint8_t Tag = pData[Pos + DescPos];
+		const uint8_t Length = pData[Pos + DescPos + 1];
+		if (DescPos + 2 + Length > TransmissionInfoLoopLength)
+			break;
+
+		// network_identification_descriptor
+		if ((Tag == 0xC2_u8) && (Length >= 2))
+			m_NetworkID = Load16(&pData[Pos + DescPos + 2]);
+
+		DescPos += 2 + Length;
+	}
+
+	Pos += TransmissionInfoLoopLength;
+
+	while (Pos + 4 <= DataSize) {
+		ServiceInfo &Info = m_ServiceList.emplace_back();
+
+		Info.ServiceID = Load16(&pData[Pos + 0]);
+		Info.RunningStatus = pData[Pos + 2] >> 5;
+		Info.FreeCAMode = (pData[Pos + 2] & 0x10) != 0;
+		Info.EventTimeValid = false;
+		Info.EventStartTime.Reset();
+		Info.EventDuration = 0;
+
+		const uint16_t DescriptorLoopLength = Load16(&pData[Pos + 2]) & 0x0FFF;
+		Pos += 4;
+		if (Pos + DescriptorLoopLength > DataSize)
+			break;
+
+		if (DescriptorLoopLength > 0)
+			Info.Descriptors.ParseBlock(&pData[Pos], DescriptorLoopLength);
+
+		for (size_t DescPos = 0; DescPos + 2 <= DescriptorLoopLength;) {
+			const uint8_t Tag = pData[Pos + DescPos];
+			const uint8_t Length = pData[Pos + DescPos + 1];
+			if (DescPos + 2 + Length > DescriptorLoopLength)
+				break;
+
+			// partial_transport_stream_time_descriptor
+			if ((Tag == 0xC3_u8) && (Length >= 8)) {
+				MJDBCDTimeToDateTime(&pData[Pos + DescPos + 2], &Info.EventStartTime);
+				Info.EventDuration = BCDTimeToSecond(&pData[Pos + DescPos + 7]);
+				Info.EventTimeValid = Info.EventStartTime.IsValid();
+			}
+
+			DescPos += 2 + Length;
+		}
+
+		Pos += DescriptorLoopLength;
+	}
+
+	return true;
+}
+
+
+
+
 BITTable::BITTable()
 {
 	Reset();
