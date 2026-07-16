@@ -1094,6 +1094,9 @@ bool SITTable::OnTableUpdate(const PSISection *pCurSection, const PSISection *pO
 
 	m_NetworkID = pCurSection->GetTableIDExtension();
 	m_ServiceList.clear();
+	bool DefaultEventTimeValid = false;
+	DateTime DefaultEventStartTime;
+	uint32_t DefaultEventDuration = 0;
 
 	const uint16_t TransmissionInfoLoopLength = Load16(&pData[0]) & 0x0FFF;
 	size_t Pos = 2;
@@ -1111,8 +1114,15 @@ bool SITTable::OnTableUpdate(const PSISection *pCurSection, const PSISection *pO
 			break;
 
 		// network_identification_descriptor
-		if ((Tag == 0xC2_u8) && (Length >= 2))
-			m_NetworkID = Load16(&pData[Pos + DescPos + 2]);
+		if ((Tag == 0xC2_u8) && (Length >= 7))
+			m_NetworkID = Load16(&pData[Pos + DescPos + 7]);
+
+		// partial_transport_stream_time_descriptor
+		if ((Tag == 0xC3_u8) && (Length >= 9)) {
+			MJDBCDTimeToDateTime(&pData[Pos + DescPos + 3], &DefaultEventStartTime);
+			DefaultEventDuration = BCDTimeToSecond(&pData[Pos + DescPos + 8]);
+			DefaultEventTimeValid = DefaultEventStartTime.IsValid();
+		}
 
 		DescPos += 2 + Length;
 	}
@@ -1125,9 +1135,12 @@ bool SITTable::OnTableUpdate(const PSISection *pCurSection, const PSISection *pO
 		Info.ServiceID = Load16(&pData[Pos + 0]);
 		Info.RunningStatus = pData[Pos + 2] >> 5;
 		Info.FreeCAMode = (pData[Pos + 2] & 0x10) != 0;
-		Info.EventTimeValid = false;
-		Info.EventStartTime.Reset();
-		Info.EventDuration = 0;
+		Info.EventTimeValid = DefaultEventTimeValid;
+		if (DefaultEventTimeValid)
+			Info.EventStartTime = DefaultEventStartTime;
+		else
+			Info.EventStartTime.Reset();
+		Info.EventDuration = DefaultEventDuration;
 
 		const uint16_t DescriptorLoopLength = Load16(&pData[Pos + 2]) & 0x0FFF;
 		Pos += 4;
@@ -1144,9 +1157,9 @@ bool SITTable::OnTableUpdate(const PSISection *pCurSection, const PSISection *pO
 				break;
 
 			// partial_transport_stream_time_descriptor
-			if ((Tag == 0xC3_u8) && (Length >= 8)) {
-				MJDBCDTimeToDateTime(&pData[Pos + DescPos + 2], &Info.EventStartTime);
-				Info.EventDuration = BCDTimeToSecond(&pData[Pos + DescPos + 7]);
+			if ((Tag == 0xC3_u8) && (Length >= 9)) {
+				MJDBCDTimeToDateTime(&pData[Pos + DescPos + 3], &Info.EventStartTime);
+				Info.EventDuration = BCDTimeToSecond(&pData[Pos + DescPos + 8]);
 				Info.EventTimeValid = Info.EventStartTime.IsValid();
 			}
 
