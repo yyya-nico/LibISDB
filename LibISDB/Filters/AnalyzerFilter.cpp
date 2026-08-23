@@ -1137,14 +1137,17 @@ bool AnalyzerFilter::GetEventExtendedText(int ServiceIndex, ReturnArg<String> Te
 	BlockLock Lock(m_FilterLock);
 
 	const DescriptorBlock *pDescBlock = GetExtendedEventDescriptor(ServiceIndex, UseEventGroup, Next);
-	if (pDescBlock == nullptr) {
-		if (!Next)
-			pDescBlock = GetSITItemDesc(ServiceIndex);
-		if (pDescBlock == nullptr)
-			return false;
+	if ((pDescBlock != nullptr)
+			&& LibISDB::GetEventExtendedText(pDescBlock, m_StringDecoder, ARIBStringDecoder::DecodeFlag::UseCharSize, Text))
+		return true;
+
+	if (!Next) {
+		pDescBlock = GetSITItemDesc(ServiceIndex);
+		if (pDescBlock != nullptr)
+			return LibISDB::GetEventExtendedText(pDescBlock, m_StringDecoder, ARIBStringDecoder::DecodeFlag::UseCharSize, Text);
 	}
 
-	return LibISDB::GetEventExtendedText(pDescBlock, m_StringDecoder, ARIBStringDecoder::DecodeFlag::UseCharSize, Text);
+	return false;
 }
 
 
@@ -1158,14 +1161,17 @@ bool AnalyzerFilter::GetEventExtendedText(int ServiceIndex, ReturnArg<EventInfo:
 	BlockLock Lock(m_FilterLock);
 
 	const DescriptorBlock *pDescBlock = GetExtendedEventDescriptor(ServiceIndex, UseEventGroup, Next);
-	if (pDescBlock == nullptr) {
-		if (!Next)
-			pDescBlock = GetSITItemDesc(ServiceIndex);
-		if (pDescBlock == nullptr)
-			return false;
+	if ((pDescBlock != nullptr)
+			&& GetEventExtendedTextList(pDescBlock, m_StringDecoder, ARIBStringDecoder::DecodeFlag::UseCharSize, List))
+		return true;
+
+	if (!Next) {
+		pDescBlock = GetSITItemDesc(ServiceIndex);
+		if (pDescBlock != nullptr)
+			return GetEventExtendedTextList(pDescBlock, m_StringDecoder, ARIBStringDecoder::DecodeFlag::UseCharSize, List);
 	}
 
-	return GetEventExtendedTextList(pDescBlock, m_StringDecoder, ARIBStringDecoder::DecodeFlag::UseCharSize, List);
+	return false;
 }
 
 
@@ -1179,14 +1185,15 @@ bool AnalyzerFilter::GetEventVideoInfo(int ServiceIndex, int VideoIndex, ReturnA
 	if ((static_cast<unsigned int>(ServiceIndex) < m_ServiceList.size())
 			&& (static_cast<unsigned int>(VideoIndex) < m_ServiceList[ServiceIndex].VideoESList.size())) {
 		const DescriptorBlock *pDescBlock = GetHEITItemDesc(ServiceIndex, Next);
-
-		if (pDescBlock != nullptr) {
-			const ComponentDescriptor *pComponentDesc =
-				GetComponentDescByComponentTag(pDescBlock, m_ServiceList[ServiceIndex].VideoESList[VideoIndex].ComponentTag);
-			if (pComponentDesc != nullptr) {
-				ComponentDescToVideoInfo(pComponentDesc, Info);
-				return true;
-			}
+		const uint8_t ComponentTag = m_ServiceList[ServiceIndex].VideoESList[VideoIndex].ComponentTag;
+		const ComponentDescriptor *pComponentDesc = GetComponentDescByComponentTag(pDescBlock, ComponentTag);
+		if ((pComponentDesc == nullptr) && !Next) {
+			pDescBlock = GetSITItemDesc(ServiceIndex);
+			pComponentDesc = GetComponentDescByComponentTag(pDescBlock, ComponentTag);
+		}
+		if (pComponentDesc != nullptr) {
+			ComponentDescToVideoInfo(pComponentDesc, Info);
+			return true;
 		}
 	}
 
@@ -1203,9 +1210,9 @@ bool AnalyzerFilter::GetEventVideoList(int ServiceIndex, ReturnArg<EventVideoLis
 
 	BlockLock Lock(m_FilterLock);
 
-	const DescriptorBlock *pDescBlock = GetHEITItemDesc(ServiceIndex, Next);
-
-	if (pDescBlock != nullptr) {
+	auto AppendDescriptors = [&](const DescriptorBlock *pDescBlock) {
+		if (pDescBlock == nullptr)
+			return;
 		pDescBlock->EnumDescriptors<ComponentDescriptor>(
 			[&](const ComponentDescriptor *pComponentDesc) {
 				EventVideoInfo VideoInfo;
@@ -1213,10 +1220,16 @@ bool AnalyzerFilter::GetEventVideoList(int ServiceIndex, ReturnArg<EventVideoLis
 				ComponentDescToVideoInfo(pComponentDesc, &VideoInfo);
 				List->push_back(VideoInfo);
 			});
-		return true;
+	};
+
+	const DescriptorBlock *pDescBlock = GetHEITItemDesc(ServiceIndex, Next);
+	AppendDescriptors(pDescBlock);
+	if (List->empty() && !Next) {
+		pDescBlock = GetSITItemDesc(ServiceIndex);
+		AppendDescriptors(pDescBlock);
 	}
 
-	return false;
+	return pDescBlock != nullptr;
 }
 
 
@@ -1230,14 +1243,15 @@ bool AnalyzerFilter::GetEventAudioInfo(int ServiceIndex, int AudioIndex, ReturnA
 	if ((static_cast<unsigned int>(ServiceIndex) < m_ServiceList.size())
 			&& (static_cast<unsigned int>(AudioIndex) < m_ServiceList[ServiceIndex].AudioESList.size())) {
 		const DescriptorBlock *pDescBlock = GetHEITItemDesc(ServiceIndex, Next);
-
-		if (pDescBlock != nullptr) {
-			const AudioComponentDescriptor *pAudioDesc =
-				GetAudioComponentDescByComponentTag(pDescBlock, m_ServiceList[ServiceIndex].AudioESList[AudioIndex].ComponentTag);
-			if (pAudioDesc != nullptr) {
-				AudioComponentDescToAudioInfo(pAudioDesc, Info);
-				return true;
-			}
+		const uint8_t ComponentTag = m_ServiceList[ServiceIndex].AudioESList[AudioIndex].ComponentTag;
+		const AudioComponentDescriptor *pAudioDesc = GetAudioComponentDescByComponentTag(pDescBlock, ComponentTag);
+		if ((pAudioDesc == nullptr) && !Next) {
+			pDescBlock = GetSITItemDesc(ServiceIndex);
+			pAudioDesc = GetAudioComponentDescByComponentTag(pDescBlock, ComponentTag);
+		}
+		if (pAudioDesc != nullptr) {
+			AudioComponentDescToAudioInfo(pAudioDesc, Info);
+			return true;
 		}
 	}
 
@@ -1254,9 +1268,9 @@ bool AnalyzerFilter::GetEventAudioList(int ServiceIndex, ReturnArg<EventAudioLis
 
 	BlockLock Lock(m_FilterLock);
 
-	const DescriptorBlock *pDescBlock = GetHEITItemDesc(ServiceIndex, Next);
-
-	if (pDescBlock != nullptr) {
+	auto AppendDescriptors = [&](const DescriptorBlock *pDescBlock) {
+		if (pDescBlock == nullptr)
+			return;
 		pDescBlock->EnumDescriptors<AudioComponentDescriptor>(
 			[&](const AudioComponentDescriptor *pAudioComponent) {
 				EventAudioInfo AudioInfo;
@@ -1264,10 +1278,16 @@ bool AnalyzerFilter::GetEventAudioList(int ServiceIndex, ReturnArg<EventAudioLis
 				AudioComponentDescToAudioInfo(pAudioComponent, &AudioInfo);
 				List->push_back(AudioInfo);
 			});
-		return true;
+	};
+
+	const DescriptorBlock *pDescBlock = GetHEITItemDesc(ServiceIndex, Next);
+	AppendDescriptors(pDescBlock);
+	if (List->empty() && !Next) {
+		pDescBlock = GetSITItemDesc(ServiceIndex);
+		AppendDescriptors(pDescBlock);
 	}
 
-	return false;
+	return pDescBlock != nullptr;
 }
 
 
@@ -1279,18 +1299,18 @@ bool AnalyzerFilter::GetEventContentNibble(int ServiceIndex, ReturnArg<EventCont
 	BlockLock Lock(m_FilterLock);
 
 	const DescriptorBlock *pDescBlock = GetHEITItemDesc(ServiceIndex, Next);
-	if ((pDescBlock == nullptr) && !Next)
+	const ContentDescriptor *pContentDesc =
+		pDescBlock != nullptr ? pDescBlock->GetDescriptor<ContentDescriptor>() : nullptr;
+	if ((pContentDesc == nullptr) && !Next) {
 		pDescBlock = GetSITItemDesc(ServiceIndex);
+		pContentDesc = pDescBlock != nullptr ? pDescBlock->GetDescriptor<ContentDescriptor>() : nullptr;
+	}
 
-	if (pDescBlock != nullptr) {
-		const ContentDescriptor *pContentDesc = pDescBlock->GetDescriptor<ContentDescriptor>();
-
-		if (pContentDesc != nullptr) {
-			Info->NibbleCount = pContentDesc->GetNibbleCount();
-			for (int i = 0; i < Info->NibbleCount; i++)
-				pContentDesc->GetNibble(i, &Info->NibbleList[i]);
-			return true;
-		}
+	if (pContentDesc != nullptr) {
+		Info->NibbleCount = pContentDesc->GetNibbleCount();
+		for (int i = 0; i < Info->NibbleCount; i++)
+			pContentDesc->GetNibble(i, &Info->NibbleList[i]);
+		return true;
 	}
 
 	return false;
@@ -1305,26 +1325,28 @@ bool AnalyzerFilter::GetEventSeriesInfo(int ServiceIndex, ReturnArg<EventSeriesI
 	BlockLock Lock(m_FilterLock);
 
 	const DescriptorBlock *pDescBlock = GetHEITItemDesc(ServiceIndex, Next);
+	const SeriesDescriptor *pSeriesDesc =
+		pDescBlock != nullptr ? pDescBlock->GetDescriptor<SeriesDescriptor>() : nullptr;
+	if ((pSeriesDesc == nullptr) && !Next) {
+		pDescBlock = GetSITItemDesc(ServiceIndex);
+		pSeriesDesc = pDescBlock != nullptr ? pDescBlock->GetDescriptor<SeriesDescriptor>() : nullptr;
+	}
 
-	if (pDescBlock != nullptr) {
-		const SeriesDescriptor *pSeriesDesc = pDescBlock->GetDescriptor<SeriesDescriptor>();
+	if (pSeriesDesc != nullptr) {
+		Info->SeriesID = pSeriesDesc->GetSeriesID();
+		Info->RepeatLabel = pSeriesDesc->GetRepeatLabel();
+		Info->ProgramPattern = pSeriesDesc->GetProgramPattern();
+		if (pSeriesDesc->IsExpireDateValid())
+			pSeriesDesc->GetExpireDate(&Info->ExpireDate);
+		else
+			Info->ExpireDate.Reset();
+		Info->EpisodeNumber = pSeriesDesc->GetEpisodeNumber();
+		Info->LastEpisodeNumber = pSeriesDesc->GetLastEpisodeNumber();
+		ARIBString Name;
+		pSeriesDesc->GetSeriesName(&Name);
+		m_StringDecoder.Decode(Name, &Info->SeriesName);
 
-		if (pSeriesDesc != nullptr) {
-			Info->SeriesID = pSeriesDesc->GetSeriesID();
-			Info->RepeatLabel = pSeriesDesc->GetRepeatLabel();
-			Info->ProgramPattern = pSeriesDesc->GetProgramPattern();
-			if (pSeriesDesc->IsExpireDateValid())
-				pSeriesDesc->GetExpireDate(&Info->ExpireDate);
-			else
-				Info->ExpireDate.Reset();
-			Info->EpisodeNumber = pSeriesDesc->GetEpisodeNumber();
-			Info->LastEpisodeNumber = pSeriesDesc->GetLastEpisodeNumber();
-			ARIBString Name;
-			pSeriesDesc->GetSeriesName(&Name);
-			m_StringDecoder.Decode(Name, &Info->SeriesName);
-
-			return true;
-		}
+		return true;
 	}
 
 	return false;
@@ -1371,8 +1393,8 @@ bool AnalyzerFilter::GetEventInfo(int ServiceIndex, ReturnArg<EventInfo> Info, b
 		if (!GetEventExtendedText(ServiceIndex, &Info->ExtendedText, false, false))
 			Info->ExtendedText.clear();
 
-		Info->VideoList.clear();
-		Info->AudioList.clear();
+		GetEventVideoList(ServiceIndex, &Info->VideoList, false);
+		GetEventAudioList(ServiceIndex, &Info->AudioList, false);
 		if (!GetEventContentNibble(ServiceIndex, &Info->ContentNibble, false))
 			Info->ContentNibble.NibbleCount = 0;
 
@@ -1417,13 +1439,15 @@ int AnalyzerFilter::GetEventComponentGroupCount(int ServiceIndex, bool Next) con
 	BlockLock Lock(m_FilterLock);
 
 	const DescriptorBlock *pDescBlock = GetHEITItemDesc(ServiceIndex, Next);
-
-	if (pDescBlock != nullptr) {
-		const ComponentGroupDescriptor *pComponentGroupDesc = pDescBlock->GetDescriptor<ComponentGroupDescriptor>();
-
-		if (pComponentGroupDesc != nullptr)
-			return pComponentGroupDesc->GetGroupCount();
+	const ComponentGroupDescriptor *pComponentGroupDesc =
+		pDescBlock != nullptr ? pDescBlock->GetDescriptor<ComponentGroupDescriptor>() : nullptr;
+	if ((pComponentGroupDesc == nullptr) && !Next) {
+		pDescBlock = GetSITItemDesc(ServiceIndex);
+		pComponentGroupDesc = pDescBlock != nullptr ? pDescBlock->GetDescriptor<ComponentGroupDescriptor>() : nullptr;
 	}
+
+	if (pComponentGroupDesc != nullptr)
+		return pComponentGroupDesc->GetGroupCount();
 
 	return 0;
 }
@@ -1437,22 +1461,24 @@ bool AnalyzerFilter::GetEventComponentGroupInfo(int ServiceIndex, int GroupIndex
 	BlockLock Lock(m_FilterLock);
 
 	const DescriptorBlock *pDescBlock = GetHEITItemDesc(ServiceIndex, Next);
+	const ComponentGroupDescriptor *pComponentGroupDesc =
+		pDescBlock != nullptr ? pDescBlock->GetDescriptor<ComponentGroupDescriptor>() : nullptr;
+	if ((pComponentGroupDesc == nullptr) && !Next) {
+		pDescBlock = GetSITItemDesc(ServiceIndex);
+		pComponentGroupDesc = pDescBlock != nullptr ? pDescBlock->GetDescriptor<ComponentGroupDescriptor>() : nullptr;
+	}
 
-	if (pDescBlock != nullptr) {
-		const ComponentGroupDescriptor *pComponentGroupDesc = pDescBlock->GetDescriptor<ComponentGroupDescriptor>();
+	if (pComponentGroupDesc != nullptr) {
+		const ComponentGroupDescriptor::GroupInfo *pGroup = pComponentGroupDesc->GetGroupInfo(GroupIndex);
 
-		if (pComponentGroupDesc != nullptr) {
-			const ComponentGroupDescriptor::GroupInfo *pGroup = pComponentGroupDesc->GetGroupInfo(GroupIndex);
+		if (pGroup != nullptr) {
+			Info->ComponentGroupID = pGroup->ComponentGroupID;
+			Info->NumOfCAUnit = pGroup->NumOfCAUnit;
+			std::memcpy(Info->CAUnitList, pGroup->CAUnitList, pGroup->NumOfCAUnit * sizeof(ComponentGroupDescriptor::CAUnitInfo));
+			Info->TotalBitRate = pGroup->TotalBitRate;
+			m_StringDecoder.Decode(pGroup->Text, &Info->Text);
 
-			if (pGroup != nullptr) {
-				Info->ComponentGroupID = pGroup->ComponentGroupID;
-				Info->NumOfCAUnit = pGroup->NumOfCAUnit;
-				std::memcpy(Info->CAUnitList, pGroup->CAUnitList, pGroup->NumOfCAUnit * sizeof(ComponentGroupDescriptor::CAUnitInfo));
-				Info->TotalBitRate = pGroup->TotalBitRate;
-				m_StringDecoder.Decode(pGroup->Text, &Info->Text);
-
-				return true;
-			}
+			return true;
 		}
 	}
 
@@ -1468,32 +1494,34 @@ bool AnalyzerFilter::GetEventComponentGroupList(int ServiceIndex, ReturnArg<Even
 	BlockLock Lock(m_FilterLock);
 
 	const DescriptorBlock *pDescBlock = GetHEITItemDesc(ServiceIndex, Next);
+	const ComponentGroupDescriptor *pComponentGroupDesc =
+		pDescBlock != nullptr ? pDescBlock->GetDescriptor<ComponentGroupDescriptor>() : nullptr;
+	if ((pComponentGroupDesc == nullptr) && !Next) {
+		pDescBlock = GetSITItemDesc(ServiceIndex);
+		pComponentGroupDesc = pDescBlock != nullptr ? pDescBlock->GetDescriptor<ComponentGroupDescriptor>() : nullptr;
+	}
 
-	if (pDescBlock != nullptr) {
-		const ComponentGroupDescriptor *pComponentGroupDesc = pDescBlock->GetDescriptor<ComponentGroupDescriptor>();
+	if (pComponentGroupDesc != nullptr) {
+		const int GroupCount = pComponentGroupDesc->GetGroupCount();
 
-		if (pComponentGroupDesc != nullptr) {
-			const int GroupCount = pComponentGroupDesc->GetGroupCount();
+		List->clear();
+		List->reserve(GroupCount);
 
-			List->clear();
-			List->reserve(GroupCount);
+		for (int i = 0; i < GroupCount; i++) {
+			const ComponentGroupDescriptor::GroupInfo *pGroup = pComponentGroupDesc->GetGroupInfo(i);
 
-			for (int i = 0; i < GroupCount; i++) {
-				const ComponentGroupDescriptor::GroupInfo *pGroup = pComponentGroupDesc->GetGroupInfo(i);
+			if (pGroup != nullptr) {
+				EventComponentGroupInfo &Info = List->emplace_back();
 
-				if (pGroup != nullptr) {
-					EventComponentGroupInfo &Info = List->emplace_back();
-
-					Info.ComponentGroupID = pGroup->ComponentGroupID;
-					Info.NumOfCAUnit = pGroup->NumOfCAUnit;
-					std::memcpy(Info.CAUnitList, pGroup->CAUnitList, pGroup->NumOfCAUnit * sizeof(ComponentGroupDescriptor::CAUnitInfo));
-					Info.TotalBitRate = pGroup->TotalBitRate;
-					m_StringDecoder.Decode(pGroup->Text, &Info.Text);
-				}
+				Info.ComponentGroupID = pGroup->ComponentGroupID;
+				Info.NumOfCAUnit = pGroup->NumOfCAUnit;
+				std::memcpy(Info.CAUnitList, pGroup->CAUnitList, pGroup->NumOfCAUnit * sizeof(ComponentGroupDescriptor::CAUnitInfo));
+				Info.TotalBitRate = pGroup->TotalBitRate;
+				m_StringDecoder.Decode(pGroup->Text, &Info.Text);
 			}
-
-			return true;
 		}
+
+		return true;
 	}
 
 	return false;
@@ -1505,22 +1533,24 @@ int AnalyzerFilter::GetEventComponentGroupIndexByComponentTag(int ServiceIndex, 
 	BlockLock Lock(m_FilterLock);
 
 	const DescriptorBlock *pDescBlock = GetHEITItemDesc(ServiceIndex, Next);
+	const ComponentGroupDescriptor *pComponentGroupDesc =
+		pDescBlock != nullptr ? pDescBlock->GetDescriptor<ComponentGroupDescriptor>() : nullptr;
+	if ((pComponentGroupDesc == nullptr) && !Next) {
+		pDescBlock = GetSITItemDesc(ServiceIndex);
+		pComponentGroupDesc = pDescBlock != nullptr ? pDescBlock->GetDescriptor<ComponentGroupDescriptor>() : nullptr;
+	}
 
-	if (pDescBlock != nullptr) {
-		const ComponentGroupDescriptor *pComponentGroupDesc = pDescBlock->GetDescriptor<ComponentGroupDescriptor>();
+	if (pComponentGroupDesc != nullptr) {
+		const int GroupCount = pComponentGroupDesc->GetGroupCount();
 
-		if (pComponentGroupDesc != nullptr) {
-			const int GroupCount = pComponentGroupDesc->GetGroupCount();
+		for (int i = 0; i < GroupCount; i++) {
+			const ComponentGroupDescriptor::GroupInfo *pInfo = pComponentGroupDesc->GetGroupInfo(i);
 
-			for (int i = 0; i < GroupCount; i++) {
-				const ComponentGroupDescriptor::GroupInfo *pInfo = pComponentGroupDesc->GetGroupInfo(i);
-
-				if (pInfo != nullptr) {
-					for (int j = 0; j < pInfo->NumOfCAUnit; j++) {
-						for (int k = 0; k < pInfo->CAUnitList[j].NumOfComponent; k++) {
-							if (pInfo->CAUnitList[j].ComponentTag[k] == ComponentTag)
-								return i;
-						}
+			if (pInfo != nullptr) {
+				for (int j = 0; j < pInfo->NumOfCAUnit; j++) {
+					for (int k = 0; k < pInfo->CAUnitList[j].NumOfComponent; k++) {
+						if (pInfo->CAUnitList[j].ComponentTag[k] == ComponentTag)
+							return i;
 					}
 				}
 			}
@@ -1701,10 +1731,11 @@ bool AnalyzerFilter::GetTOTTime(ReturnArg<DateTime> Time) const
 	BlockLock Lock(m_FilterLock);
 
 	const TOTTable *pTOTTable = m_PIDMapManager.GetMapTarget<TOTTable>(PID_TOT);
-	if (pTOTTable == nullptr)
-		return false;
+	if ((pTOTTable != nullptr) && pTOTTable->GetDateTime(Time))
+		return true;
 
-	return pTOTTable->GetDateTime(Time);
+	const SITTable *pSITTable = m_PIDMapManager.GetMapTarget<SITTable>(PID_SIT);
+	return (pSITTable != nullptr) && pSITTable->GetJSTTime(Time);
 }
 
 
@@ -1713,10 +1744,13 @@ bool AnalyzerFilter::GetInterpolatedTOTTime(ReturnArg<DateTime> Time, OptionalRe
 	// PCRで補間したTOT時刻を取得する
 	BlockLock Lock(m_FilterLock);
 
-	if (!GetTOTTime(Time))
-		return false;
-
 	Interpolated = false;
+
+	const TOTTable *pTOTTable = m_PIDMapManager.GetMapTarget<TOTTable>(PID_TOT);
+	if ((pTOTTable == nullptr) || !pTOTTable->GetDateTime(Time)) {
+		const SITTable *pSITTable = m_PIDMapManager.GetMapTarget<SITTable>(PID_SIT);
+		return (pSITTable != nullptr) && pSITTable->GetJSTTime(Time);
+	}
 
 	if (m_TOTInterpolation.PCRPID != PID_INVALID) {
 		for (size_t i = 0; i < m_ServiceList.size(); i++) {
@@ -2473,6 +2507,19 @@ void AnalyzerFilter::OnSITSection(const PSITableBase *pTable, const PSISection *
 	if (m_NetworkID == NETWORK_ID_INVALID)
 		m_NetworkID = pSITTable->GetNetworkID();
 
+	const DescriptorBlock *pTransmissionDesc = pSITTable->GetTransmissionDescriptorBlock();
+	if (pTransmissionDesc != nullptr) {
+		const TSInformationDescriptor *pTSInfoDesc =
+			pTransmissionDesc->GetDescriptor<TSInformationDescriptor>();
+		if (pTSInfoDesc != nullptr) {
+			ARIBString Name;
+			if (m_NITInfo.TSName.empty() && pTSInfoDesc->GetTSName(&Name))
+				m_StringDecoder.Decode(Name, &m_NITInfo.TSName);
+			if (m_NITInfo.RemoteControlKeyID == 0)
+				m_NITInfo.RemoteControlKeyID = pTSInfoDesc->GetRemoteControlKeyID();
+		}
+	}
+
 	m_SDTServiceList.clear();
 
 	for (int i = 0; i < pSITTable->GetServiceCount(); i++) {
@@ -2502,19 +2549,31 @@ void AnalyzerFilter::OnSITSection(const PSITableBase *pTable, const PSISection *
 				m_StringDecoder.Decode(Name, &SDTInfo.ServiceName);
 		}
 
+		const LogoTransmissionDescriptor *pLogoDesc =
+			pService->Descriptors.GetDescriptor<LogoTransmissionDescriptor>();
+		if (pLogoDesc != nullptr)
+			SDTInfo.LogoID = pLogoDesc->GetLogoID();
+
 		if (ServiceIndex >= 0) {
 			ServiceInfo &Service = m_ServiceList[ServiceIndex];
 			SDTInfo.FreeCAMode = Service.FreeCAMode;
 			Service.RunningStatus = pService->RunningStatus;
-			Service.ServiceType = SDTInfo.ServiceType;
-			Service.ProviderName = SDTInfo.ProviderName;
-			Service.ServiceName = SDTInfo.ServiceName;
+			if (Service.ServiceType == SERVICE_TYPE_INVALID)
+				Service.ServiceType = SDTInfo.ServiceType;
+			if (Service.ProviderName.empty())
+				Service.ProviderName = SDTInfo.ProviderName;
+			if (Service.ServiceName.empty())
+				Service.ServiceName = SDTInfo.ServiceName;
+			if (Service.LogoID == LOGO_ID_INVALID)
+				Service.LogoID = SDTInfo.LogoID;
 		}
 	}
 
 	m_SDTUpdated = true;
+	m_NITUpdated = true;
 
 	m_FilterLock.Unlock();
+	m_EventListenerList.CallEventListener(&EventListener::OnNITUpdated, this);
 	m_EventListenerList.CallEventListener(&EventListener::OnSDTUpdated, this);
 #ifdef LIBISDB_ANALYZER_FILTER_EIT_SUPPORT
 	m_EventListenerList.CallEventListener(&EventListener::OnEITUpdated, this);

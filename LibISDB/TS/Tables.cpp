@@ -1054,6 +1054,17 @@ uint16_t SITTable::GetNetworkID() const
 }
 
 
+bool SITTable::GetJSTTime(ReturnArg<DateTime> Time) const
+{
+	if (!Time)
+		return false;
+
+	const PartialTransportStreamTimeDescriptor *pTimeDesc =
+		m_TransmissionDescriptors.GetDescriptor<PartialTransportStreamTimeDescriptor>();
+	return (pTimeDesc != nullptr) && pTimeDesc->GetJSTTime(Time);
+}
+
+
 const DescriptorBlock * SITTable::GetTransmissionDescriptorBlock() const
 {
 	return &m_TransmissionDescriptors;
@@ -1128,9 +1139,6 @@ bool SITTable::OnTableUpdate(const PSISection *pCurSection, const PSISection *pO
 	uint16_t NetworkID = NETWORK_ID_INVALID;
 	DescriptorBlock TransmissionDescriptors;
 	std::vector<ServiceInfo> ServiceList;
-	bool DefaultEventTimeValid = false;
-	DateTime DefaultEventStartTime;
-	uint32_t DefaultEventDuration = 0;
 
 	size_t Pos = HeaderSize;
 	const uint16_t TransmissionInfoLoopLength = Load16(&pData[Pos]) & 0x0FFF;
@@ -1143,23 +1151,10 @@ bool SITTable::OnTableUpdate(const PSISection *pCurSection, const PSISection *pO
 	if (TransmissionInfoLoopLength > 0)
 		TransmissionDescriptors.ParseBlock(&pData[Pos], TransmissionInfoLoopLength);
 
-	for (size_t DescPos = 0; DescPos + 2 <= TransmissionInfoLoopLength;) {
-		const uint8_t Tag = pData[Pos + DescPos];
-		const uint8_t Length = pData[Pos + DescPos + 1];
-
-		// network_identification_descriptor
-		if ((Tag == 0xC2_u8) && (Length >= 7))
-			NetworkID = Load16(&pData[Pos + DescPos + 7]);
-
-		// partial_transport_stream_time_descriptor
-		if ((Tag == 0xC3_u8) && (Length >= 9)) {
-			MJDBCDTimeToDateTime(&pData[Pos + DescPos + 3], &DefaultEventStartTime);
-			DefaultEventDuration = BCDTimeToSecond(&pData[Pos + DescPos + 8]);
-			DefaultEventTimeValid = DefaultEventStartTime.IsValid();
-		}
-
-		DescPos += 2 + Length;
-	}
+	const NetworkIdentificationDescriptor *pNetworkDesc =
+		TransmissionDescriptors.GetDescriptor<NetworkIdentificationDescriptor>();
+	if (pNetworkDesc != nullptr)
+		NetworkID = pNetworkDesc->GetNetworkID();
 
 	Pos += TransmissionInfoLoopLength;
 
@@ -1171,12 +1166,9 @@ bool SITTable::OnTableUpdate(const PSISection *pCurSection, const PSISection *pO
 
 		Info.ServiceID = Load16(&pData[Pos + 0]);
 		Info.RunningStatus = (pData[Pos + 2] >> 4) & 0x07;
-		Info.EventTimeValid = DefaultEventTimeValid;
-		if (DefaultEventTimeValid)
-			Info.EventStartTime = DefaultEventStartTime;
-		else
-			Info.EventStartTime.Reset();
-		Info.EventDuration = DefaultEventDuration;
+		Info.EventTimeValid = false;
+		Info.EventStartTime.Reset();
+		Info.EventDuration = 0;
 
 		const uint16_t DescriptorLoopLength = Load16(&pData[Pos + 2]) & 0x0FFF;
 		Pos += 4;
@@ -1188,18 +1180,12 @@ bool SITTable::OnTableUpdate(const PSISection *pCurSection, const PSISection *pO
 		if (DescriptorLoopLength > 0)
 			Info.Descriptors.ParseBlock(&pData[Pos], DescriptorLoopLength);
 
-		for (size_t DescPos = 0; DescPos + 2 <= DescriptorLoopLength;) {
-			const uint8_t Tag = pData[Pos + DescPos];
-			const uint8_t Length = pData[Pos + DescPos + 1];
-
-			// partial_transport_stream_time_descriptor
-			if ((Tag == 0xC3_u8) && (Length >= 9)) {
-				MJDBCDTimeToDateTime(&pData[Pos + DescPos + 3], &Info.EventStartTime);
-				Info.EventDuration = BCDTimeToSecond(&pData[Pos + DescPos + 8]);
-				Info.EventTimeValid = Info.EventStartTime.IsValid();
-			}
-
-			DescPos += 2 + Length;
+		const PartialTransportStreamTimeDescriptor *pTimeDesc =
+			Info.Descriptors.GetDescriptor<PartialTransportStreamTimeDescriptor>();
+		if (pTimeDesc != nullptr) {
+			Info.EventTimeValid = pTimeDesc->GetEventStartTime(&Info.EventStartTime);
+			if (pTimeDesc->IsEventDurationValid())
+				Info.EventDuration = pTimeDesc->GetEventDuration();
 		}
 
 		Pos += DescriptorLoopLength;

@@ -375,6 +375,26 @@ namespace LibISDB
 		std::vector<TimeOffsetInfo> m_TimeOffsetList;
 	};
 
+	/** 部分受信TS記述子クラス */
+	class PartialTransportStreamDescriptor
+		: public DescriptorTemplate<PartialTransportStreamDescriptor, 0x63>
+	{
+	public:
+		PartialTransportStreamDescriptor() noexcept;
+
+		void Reset() noexcept override;
+		uint32_t GetPeakRate() const noexcept { return m_PeakRate; }
+		uint32_t GetMinimumOverallSmoothingRate() const noexcept { return m_MinimumOverallSmoothingRate; }
+		uint16_t GetMaximumOverallSmoothingBuffer() const noexcept { return m_MaximumOverallSmoothingBuffer; }
+
+	protected:
+		bool StoreContents(const uint8_t *pPayload) override;
+
+		uint32_t m_PeakRate;
+		uint32_t m_MinimumOverallSmoothingRate;
+		uint16_t m_MaximumOverallSmoothingBuffer;
+	};
+
 	/** 階層伝送記述子クラス */
 	class HierarchicalTransmissionDescriptor
 		: public DescriptorTemplate<HierarchicalTransmissionDescriptor, 0xC0>
@@ -435,6 +455,58 @@ namespace LibISDB
 		uint8_t m_APSControlData;              /**< APS_control_data */
 		uint8_t m_MaximumBitRate;              /**< maximum_bit_rate */
 		std::vector<ComponentControlInfo> m_ComponentControlList;
+	};
+
+	/** ネットワーク識別記述子クラス */
+	class NetworkIdentificationDescriptor
+		: public DescriptorTemplate<NetworkIdentificationDescriptor, 0xC2>
+	{
+	public:
+		NetworkIdentificationDescriptor() noexcept;
+
+		void Reset() noexcept override;
+		uint32_t GetCountryCode() const noexcept { return m_CountryCode; }
+		uint16_t GetMediaType() const noexcept { return m_MediaType; }
+		uint16_t GetNetworkID() const noexcept { return m_NetworkID; }
+		const DataBuffer * GetPrivateData() const noexcept { return &m_PrivateData; }
+
+	protected:
+		bool StoreContents(const uint8_t *pPayload) override;
+
+		uint32_t m_CountryCode;
+		uint16_t m_MediaType;
+		uint16_t m_NetworkID;
+		DataBuffer m_PrivateData;
+	};
+
+	/** 部分受信TS時間記述子クラス */
+	class PartialTransportStreamTimeDescriptor
+		: public DescriptorTemplate<PartialTransportStreamTimeDescriptor, 0xC3>
+	{
+	public:
+		PartialTransportStreamTimeDescriptor() noexcept;
+
+		void Reset() noexcept override;
+		uint8_t GetEventVersionNumber() const noexcept { return m_EventVersionNumber; }
+		bool GetEventStartTime(ReturnArg<DateTime> Time) const;
+		bool IsEventDurationValid() const noexcept { return m_EventDurationValid; }
+		uint32_t GetEventDuration() const noexcept { return m_EventDuration; }
+		uint32_t GetOffset() const noexcept { return m_Offset; }
+		bool GetOffsetFlag() const noexcept { return m_OffsetFlag; }
+		bool GetOtherDescriptorStatus() const noexcept { return m_OtherDescriptorStatus; }
+		bool GetJSTTime(ReturnArg<DateTime> Time) const;
+
+	protected:
+		bool StoreContents(const uint8_t *pPayload) override;
+
+		uint8_t m_EventVersionNumber;
+		DateTime m_EventStartTime;
+		bool m_EventDurationValid;
+		uint32_t m_EventDuration;
+		uint32_t m_Offset;
+		bool m_OffsetFlag;
+		bool m_OtherDescriptorStatus;
+		DateTime m_JSTTime;
 	};
 
 	/** 音声コンポーネント記述子クラス */

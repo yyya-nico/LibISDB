@@ -390,6 +390,7 @@ namespace LibISDB
 		uint8_t GetSectionNumber() const noexcept { return m_SectionNumber; }
 		uint8_t GetLastSectionNumber() const noexcept { return m_LastSectionNumber; }
 		uint16_t GetNetworkID() const;
+		bool GetJSTTime(ReturnArg<DateTime> Time) const;
 		const DescriptorBlock * GetTransmissionDescriptorBlock() const;
 		int GetServiceCount() const;
 		int GetServiceIndexByID(uint16_t ServiceID) const;

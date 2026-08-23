@@ -702,6 +702,39 @@ bool LocalTimeOffsetDescriptor::StoreContents(const uint8_t *pPayload)
 
 
 
+PartialTransportStreamDescriptor::PartialTransportStreamDescriptor() noexcept
+{
+	Reset();
+}
+
+
+void PartialTransportStreamDescriptor::Reset() noexcept
+{
+	DescriptorBase::Reset();
+
+	m_PeakRate = 0;
+	m_MinimumOverallSmoothingRate = 0;
+	m_MaximumOverallSmoothingBuffer = 0;
+}
+
+
+bool PartialTransportStreamDescriptor::StoreContents(const uint8_t *pPayload)
+{
+	if (m_Tag != TAG)
+		return false;
+	if (m_Length < 8)
+		return false;
+
+	m_PeakRate = Load24(&pPayload[0]) & 0x3FFFFF;
+	m_MinimumOverallSmoothingRate = Load24(&pPayload[3]) & 0x3FFFFF;
+	m_MaximumOverallSmoothingBuffer = Load16(&pPayload[6]) & 0x3FFF;
+
+	return true;
+}
+
+
+
+
 HierarchicalTransmissionDescriptor::HierarchicalTransmissionDescriptor() noexcept
 {
 	Reset();
@@ -824,6 +857,113 @@ bool DigitalCopyControlDescriptor::StoreContents(const uint8_t *pPayload)
 			m_ComponentControlList.push_back(Info);
 		}
 	}
+
+	return true;
+}
+
+
+
+
+NetworkIdentificationDescriptor::NetworkIdentificationDescriptor() noexcept
+{
+	Reset();
+}
+
+
+void NetworkIdentificationDescriptor::Reset() noexcept
+{
+	DescriptorBase::Reset();
+
+	m_CountryCode = 0;
+	m_MediaType = 0;
+	m_NetworkID = NETWORK_ID_INVALID;
+	m_PrivateData.ClearSize();
+}
+
+
+bool NetworkIdentificationDescriptor::StoreContents(const uint8_t *pPayload)
+{
+	if (m_Tag != TAG)
+		return false;
+	if (m_Length < 7)
+		return false;
+
+	m_CountryCode = Load24(&pPayload[0]);
+	m_MediaType = Load16(&pPayload[3]);
+	m_NetworkID = Load16(&pPayload[5]);
+	m_PrivateData.SetData(&pPayload[7], m_Length - 7);
+
+	return true;
+}
+
+
+PartialTransportStreamTimeDescriptor::PartialTransportStreamTimeDescriptor() noexcept
+{
+	Reset();
+}
+
+
+void PartialTransportStreamTimeDescriptor::Reset() noexcept
+{
+	DescriptorBase::Reset();
+
+	m_EventVersionNumber = 0;
+	m_EventStartTime.Reset();
+	m_EventDurationValid = false;
+	m_EventDuration = 0;
+	m_Offset = 0;
+	m_OffsetFlag = false;
+	m_OtherDescriptorStatus = false;
+	m_JSTTime.Reset();
+}
+
+
+bool PartialTransportStreamTimeDescriptor::GetEventStartTime(ReturnArg<DateTime> Time) const
+{
+	if (!Time || !m_EventStartTime.IsValid())
+		return false;
+
+	*Time = m_EventStartTime;
+	return true;
+}
+
+
+bool PartialTransportStreamTimeDescriptor::GetJSTTime(ReturnArg<DateTime> Time) const
+{
+	if (!Time || !m_JSTTime.IsValid())
+		return false;
+
+	*Time = m_JSTTime;
+	return true;
+}
+
+
+bool PartialTransportStreamTimeDescriptor::StoreContents(const uint8_t *pPayload)
+{
+	if (m_Tag != TAG)
+		return false;
+	if (m_Length < 13)
+		return false;
+
+	const bool JSTTimeFlag = (pPayload[12] & 0x01) != 0;
+	if (JSTTimeFlag && (m_Length < 18))
+		return false;
+
+	m_EventVersionNumber = pPayload[0];
+	MJDBCDTimeToDateTime(&pPayload[1], &m_EventStartTime);
+	m_EventDurationValid = !((pPayload[6] == 0xFF) && (pPayload[7] == 0xFF) && (pPayload[8] == 0xFF));
+	m_EventDuration = m_EventDurationValid ? BCDTimeToSecond(&pPayload[6]) : 0;
+	m_Offset = BCDTimeToSecond(&pPayload[9]);
+	m_OffsetFlag = (pPayload[12] & 0x04) != 0;
+	m_OtherDescriptorStatus = (pPayload[12] & 0x02) != 0;
+	if (JSTTimeFlag)
+		MJDBCDTimeToDateTime(&pPayload[13], &m_JSTTime);
+
+	const long Offset = m_OffsetFlag ? -static_cast<long>(m_Offset) : static_cast<long>(m_Offset);
+	if (m_EventStartTime.IsValid())
+		m_EventStartTime.OffsetSeconds(Offset);
+	if (m_JSTTime.IsValid())
+		m_JSTTime.OffsetSeconds(Offset);
 
 	return true;
 }

@@ -354,6 +354,8 @@ TEST_CASE("DateTime", "[base][time]")
 
 #include "../LibISDB/TS/Tables.hpp"
 #include "../LibISDB/TS/TSPacket.hpp"
+#include "../LibISDB/Base/ARIBTime.hpp"
+#include "../LibISDB/Filters/AnalyzerFilter.hpp"
 
 namespace
 {
@@ -389,22 +391,70 @@ namespace
 			0xC7,       // ISO_reserved, version_number = 3, current_next_indicator = 1
 			0x00,       // section_number
 			0x00,       // last_section_number
-			0xF0, 0x09, // transmission_info_loop_length
+			0xF0, 0x23, // transmission_info_loop_length
 			0xC2, 0x07, // network_identification_descriptor
 			0x4A, 0x50, 0x4E, // country_code = "JPN"
 			0x54, 0x42,       // media_type = "TB"
 			0x7F, 0xF0,       // network_id
 		};
+		LibISDB::DateTime Date;
+		Date.Year = 2024;
+		Date.Month = 1;
+		Date.Day = 2;
+		const uint16_t MJD = LibISDB::DateTimeToMJDTime(Date);
+		const uint8_t TransmissionDescriptors[] = {
+			0xC3, 0x12, // partial_transport_stream_time_descriptor
+			0x00,
+			0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+			0xFF, 0xFF, 0xFF,
+			0x00, 0x30, 0x00,
+			0xF9,
+			static_cast<uint8_t>(MJD >> 8), static_cast<uint8_t>(MJD), 0x13, 0x00, 0x00,
+			0xCD, 0x04, 0x05, 0x08, 0x54, 0x53, // TS information: key 5, name "TS"
+		};
+		Section.insert(Section.end(), std::begin(TransmissionDescriptors), std::end(TransmissionDescriptors));
 
 		if (InvalidTransmissionInfoLength)
 			Section[9] = 0x7F;
 
 		for (uint8_t Status = 0; Status < 8; Status++) {
 			Append16(&Section, static_cast<uint16_t>(0x0400 + Status));
-			Section.push_back(static_cast<uint8_t>(0x80 | (Status << 4)));
-			Section.push_back(0x00); // service_loop_length
+			if (Status == 0) {
+				const uint8_t ServiceDescriptors[] = {
+					0xC3, 0x0D,
+					0x01,
+					static_cast<uint8_t>(MJD >> 8), static_cast<uint8_t>(MJD), 0x12, 0x00, 0x00,
+					0x01, 0x00, 0x00,
+					0x00, 0x30, 0x00,
+					0xFC,
+					0x48, 0x07, 0x01, 0x02, 0x54, 0x53, 0x02, 0x54, 0x53,
+					0x4D, 0x09, 0x6A, 0x70, 0x6E, 0x02, 0x54, 0x53, 0x02, 0x54, 0x53,
+				};
+				const size_t Length = std::size(ServiceDescriptors);
+				Section.push_back(static_cast<uint8_t>(0x80 | (Status << 4) | (Length >> 8)));
+				Section.push_back(static_cast<uint8_t>(Length));
+				Section.insert(Section.end(), std::begin(ServiceDescriptors), std::end(ServiceDescriptors));
+			} else {
+				Section.push_back(static_cast<uint8_t>(0x80 | (Status << 4)));
+				Section.push_back(0x00); // service_loop_length
+			}
 		}
 
+		AppendCRC32MPEG2(&Section);
+		return Section;
+	}
+
+	std::vector<uint8_t> MakePATSection()
+	{
+		std::vector<uint8_t> Section = {
+			0x00,
+			0xB0, 0x00,
+			0x12, 0x34,
+			0xC1,
+			0x00,
+			0x00,
+			0x04, 0x00, 0xE1, 0x00,
+		};
 		AppendCRC32MPEG2(&Section);
 		return Section;
 	}
@@ -433,6 +483,13 @@ namespace
 		LibISDB::TSPacket Packet = MakeSectionPacket(LibISDB::PID_SIT, Section);
 		REQUIRE(pTable->StorePacket(&Packet));
 	}
+
+	void StoreSection(LibISDB::AnalyzerFilter *pAnalyzer, uint16_t PID, const std::vector<uint8_t> &Section)
+	{
+		LibISDB::TSPacket Packet = MakeSectionPacket(PID, Section);
+		LibISDB::SingleDataStream<LibISDB::TSPacket> Stream(&Packet);
+		REQUIRE(pAnalyzer->ReceiveData(&Stream));
+	}
 }
 
 
@@ -446,6 +503,20 @@ TEST_CASE("SIT standard section syntax and running status", "[ts][sit]")
 	CHECK(Table.GetSectionNumber() == 0);
 	CHECK(Table.GetLastSectionNumber() == 0);
 	CHECK(Table.GetNetworkID() == 0x7FF0);
+	const LibISDB::DescriptorBlock *pTransmissionDescriptors = Table.GetTransmissionDescriptorBlock();
+	REQUIRE(pTransmissionDescriptors != nullptr);
+	REQUIRE(pTransmissionDescriptors->GetDescriptor<LibISDB::NetworkIdentificationDescriptor>() != nullptr);
+	const LibISDB::TSInformationDescriptor *pTSInfo =
+		pTransmissionDescriptors->GetDescriptor<LibISDB::TSInformationDescriptor>();
+	REQUIRE(pTSInfo != nullptr);
+	CHECK(pTSInfo->GetRemoteControlKeyID() == 5);
+	LibISDB::ARIBString TSName;
+	REQUIRE(pTSInfo->GetTSName(&TSName));
+	CHECK(TSName.size() == 2);
+	LibISDB::DateTime JSTTime;
+	REQUIRE(Table.GetJSTTime(&JSTTime));
+	CHECK(JSTTime.Hour == 13);
+	CHECK(JSTTime.Minute == 30);
 	REQUIRE(Table.GetServiceCount() == 8);
 
 	for (int i = 0; i < 8; i++) {
@@ -454,6 +525,15 @@ TEST_CASE("SIT standard section syntax and running status", "[ts][sit]")
 		CHECK(pService->ServiceID == 0x0400 + i);
 		CHECK(pService->RunningStatus == i);
 	}
+
+	const LibISDB::SITTable::ServiceInfo *pService = Table.GetServiceInfo(0);
+	REQUIRE(pService != nullptr);
+	REQUIRE(pService->EventTimeValid);
+	CHECK(pService->EventStartTime.Hour == 11);
+	CHECK(pService->EventStartTime.Minute == 30);
+	CHECK(pService->EventDuration == 3600);
+	REQUIRE(pService->Descriptors.GetDescriptor<LibISDB::ServiceDescriptor>() != nullptr);
+	REQUIRE(pService->Descriptors.GetDescriptor<LibISDB::ShortEventDescriptor>() != nullptr);
 }
 
 
@@ -468,6 +548,134 @@ TEST_CASE("SIT invalid loop length does not replace current table", "[ts][sit]")
 	CHECK(Table.GetNetworkID() == 0x7FF0);
 	REQUIRE(Table.GetServiceCount() == 8);
 	CHECK(Table.GetServiceInfo(4)->RunningStatus == 4);
+}
+
+
+TEST_CASE("Analyzer uses SIT fallbacks", "[filter][sit]")
+{
+	LibISDB::AnalyzerFilter Analyzer;
+	StoreSection(&Analyzer, LibISDB::PID_PAT, MakePATSection());
+	StoreSection(&Analyzer, LibISDB::PID_SIT, MakeSITSection());
+
+	const int ServiceIndex = Analyzer.GetServiceIndexByID(0x0400);
+	REQUIRE(ServiceIndex >= 0);
+	CHECK(Analyzer.GetNetworkID() == 0x7FF0);
+	CHECK(Analyzer.GetRemoteControlKeyID() == 5);
+
+	LibISDB::String Text;
+	REQUIRE(Analyzer.GetTSName(&Text));
+	CHECK_FALSE(Text.empty());
+	REQUIRE(Analyzer.GetServiceName(ServiceIndex, &Text));
+	CHECK_FALSE(Text.empty());
+	REQUIRE(Analyzer.GetEventName(ServiceIndex, &Text));
+	CHECK_FALSE(Text.empty());
+
+	LibISDB::DateTime JSTTime;
+	REQUIRE(Analyzer.GetTOTTime(&JSTTime));
+	CHECK(JSTTime.Hour == 13);
+	CHECK(JSTTime.Minute == 30);
+
+	LibISDB::EventInfo Event;
+	REQUIRE(Analyzer.GetEventInfo(ServiceIndex, &Event));
+	CHECK(Event.StartTime.Hour == 11);
+	CHECK(Event.StartTime.Minute == 30);
+	CHECK(Event.Duration == 3600);
+}
+
+
+TEST_CASE("Partial transport stream descriptors", "[ts][descriptor][sit]")
+{
+	SECTION("partial_transport_stream_descriptor") {
+		const uint8_t Data[] = {
+			0x63, 0x08,
+			0xC1, 0x23, 0x45,
+			0xC2, 0x34, 0x56,
+			0xD3, 0x45,
+		};
+		LibISDB::PartialTransportStreamDescriptor Descriptor;
+
+		REQUIRE(Descriptor.Parse(Data, sizeof(Data)));
+		CHECK(Descriptor.GetPeakRate() == 0x012345);
+		CHECK(Descriptor.GetMinimumOverallSmoothingRate() == 0x023456);
+		CHECK(Descriptor.GetMaximumOverallSmoothingBuffer() == 0x1345);
+	}
+
+	SECTION("network_identification_descriptor") {
+		const uint8_t Data[] = {
+			0xC2, 0x09,
+			0x4A, 0x50, 0x4E,
+			0x54, 0x42,
+			0x7F, 0xF0,
+			0x12, 0x34,
+		};
+		LibISDB::DescriptorBlock Block;
+
+		REQUIRE(Block.ParseBlock(Data, sizeof(Data)) == 1);
+		const LibISDB::NetworkIdentificationDescriptor *pDescriptor =
+			Block.GetDescriptor<LibISDB::NetworkIdentificationDescriptor>();
+		REQUIRE(pDescriptor != nullptr);
+		CHECK(pDescriptor->GetCountryCode() == 0x4A504E);
+		CHECK(pDescriptor->GetMediaType() == 0x5442);
+		CHECK(pDescriptor->GetNetworkID() == 0x7FF0);
+		REQUIRE(pDescriptor->GetPrivateData()->GetSize() == 2);
+		CHECK(pDescriptor->GetPrivateData()->GetAt(0) == 0x12);
+		CHECK(pDescriptor->GetPrivateData()->GetAt(1) == 0x34);
+	}
+
+	SECTION("partial_transport_stream_time_descriptor with positive offset") {
+		LibISDB::DateTime Date;
+		Date.Year = 2024;
+		Date.Month = 1;
+		Date.Day = 2;
+		const uint16_t MJD = LibISDB::DateTimeToMJDTime(Date);
+		const uint8_t Data[] = {
+			0xC3, 0x12,
+			0x07,
+			static_cast<uint8_t>(MJD >> 8), static_cast<uint8_t>(MJD), 0x12, 0x34, 0x56,
+			0x01, 0x02, 0x03,
+			0x00, 0x30, 0x00,
+			0xFB,
+			static_cast<uint8_t>(MJD >> 8), static_cast<uint8_t>(MJD), 0x13, 0x00, 0x00,
+		};
+		LibISDB::PartialTransportStreamTimeDescriptor Descriptor;
+
+		REQUIRE(Descriptor.Parse(Data, sizeof(Data)));
+		CHECK(Descriptor.GetEventVersionNumber() == 7);
+		CHECK(Descriptor.IsEventDurationValid());
+		CHECK(Descriptor.GetEventDuration() == 3723);
+		CHECK(Descriptor.GetOffset() == 1800);
+		CHECK_FALSE(Descriptor.GetOffsetFlag());
+		CHECK(Descriptor.GetOtherDescriptorStatus());
+
+		LibISDB::DateTime EventTime;
+		REQUIRE(Descriptor.GetEventStartTime(&EventTime));
+		CHECK(EventTime.Year == 2024);
+		CHECK(EventTime.Month == 1);
+		CHECK(EventTime.Day == 2);
+		CHECK(EventTime.Hour == 13);
+		CHECK(EventTime.Minute == 4);
+		CHECK(EventTime.Second == 56);
+
+		LibISDB::DateTime JSTTime;
+		REQUIRE(Descriptor.GetJSTTime(&JSTTime));
+		CHECK(JSTTime.Hour == 13);
+		CHECK(JSTTime.Minute == 30);
+		CHECK(JSTTime.Second == 0);
+	}
+
+	SECTION("optional JST length is validated") {
+		const uint8_t Data[] = {
+			0xC3, 0x0D,
+			0x00,
+			0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+			0xFF, 0xFF, 0xFF,
+			0x00, 0x00, 0x00,
+			0xF9,
+		};
+		LibISDB::PartialTransportStreamTimeDescriptor Descriptor;
+
+		CHECK_FALSE(Descriptor.Parse(Data, sizeof(Data)));
+	}
 }
 
 
