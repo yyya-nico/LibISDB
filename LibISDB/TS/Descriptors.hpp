@@ -1250,6 +1250,35 @@ namespace LibISDB
 		std::vector<DescriptionInfo> m_DescriptionList;
 	};
 
+	/** コンテンツ利用可否記述子クラス */
+	class ContentAvailabilityDescriptor
+		: public DescriptorTemplate<ContentAvailabilityDescriptor, 0xDE>
+	{
+	public:
+		ContentAvailabilityDescriptor() noexcept;
+
+	// DescriptorBase
+		void Reset() noexcept override;
+
+	// ContentAvailabilityDescriptor
+		bool GetCopyRestrictionMode() const noexcept { return m_CopyRestrictionMode; }
+		bool GetImageConstraintToken() const noexcept { return m_ImageConstraintToken; }
+		bool GetRetentionMode() const noexcept { return m_RetentionMode; }
+		uint8_t GetRetentionState() const noexcept { return m_RetentionState; }
+		bool GetEncryptionMode() const noexcept { return m_EncryptionMode; }
+		const DataBuffer * GetPrivateData() const noexcept { return &m_PrivateData; }
+
+	protected:
+		bool StoreContents(const uint8_t *pPayload) override;
+
+		bool m_CopyRestrictionMode; /**< copy_restriction_mode */
+		bool m_ImageConstraintToken; /**< image_constraint_token */
+		bool m_RetentionMode;       /**< retention_mode */
+		uint8_t m_RetentionState;   /**< retention_state */
+		bool m_EncryptionMode;      /**< encryption_mode */
+		DataBuffer m_PrivateData;   /**< reserved_future_use */
+	};
+
 	/** アクセス制御記述子クラス */
 	class AccessControlDescriptor
 		: public DescriptorTemplate<AccessControlDescriptor, 0xF6>

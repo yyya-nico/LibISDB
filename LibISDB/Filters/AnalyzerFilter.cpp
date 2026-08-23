@@ -223,6 +223,97 @@ uint16_t AnalyzerFilter::GetPMTPID(int Index) const
 }
 
 
+bool AnalyzerFilter::GetCopyControlInfo(int Index, ReturnArg<CopyControlInfo> Info) const
+{
+	BlockLock Lock(m_FilterLock);
+
+	if (!Info || (static_cast<unsigned int>(Index) >= m_ServiceList.size()))
+		return false;
+
+	*Info = CopyControlInfo();
+
+	const ServiceInfo &Service = m_ServiceList[Index];
+	const DescriptorBlock *pPMTDescriptors = nullptr;
+	const PMTTable *pPMTTable = m_PIDMapManager.GetMapTarget<PMTTable>(Service.PMTPID);
+	if ((pPMTTable != nullptr) && (pPMTTable->GetProgramNumberID() == Service.ServiceID))
+		pPMTDescriptors = pPMTTable->GetPMTDescriptorBlock();
+
+	const DescriptorBlock *pSITDescriptors = nullptr;
+	const SITTable *pSITTable = m_PIDMapManager.GetMapTarget<SITTable>(PID_SIT);
+	if (pSITTable != nullptr) {
+		const int SITIndex = pSITTable->GetServiceIndexByID(Service.ServiceID);
+		if (SITIndex >= 0) {
+			const SITTable::ServiceInfo *pSITService = pSITTable->GetServiceInfo(SITIndex);
+			if (pSITService != nullptr)
+				pSITDescriptors = &pSITService->Descriptors;
+		}
+	}
+
+	const DigitalCopyControlDescriptor *pDigitalCopyControl = nullptr;
+	if (pPMTDescriptors != nullptr) {
+		pDigitalCopyControl =
+			pPMTDescriptors->GetDescriptor<DigitalCopyControlDescriptor>();
+		if (pDigitalCopyControl != nullptr)
+			Info->DigitalCopyControlSource = CopyControlInfo::DescriptorSource::PMT;
+	}
+	if ((pDigitalCopyControl == nullptr) && (pSITDescriptors != nullptr)) {
+		pDigitalCopyControl =
+			pSITDescriptors->GetDescriptor<DigitalCopyControlDescriptor>();
+		if (pDigitalCopyControl != nullptr)
+			Info->DigitalCopyControlSource = CopyControlInfo::DescriptorSource::SIT;
+	}
+
+	if (pDigitalCopyControl != nullptr) {
+		Info->DigitalRecordingControlData = pDigitalCopyControl->GetDigitalRecordingControlData();
+		Info->MaximumBitRateFlag = pDigitalCopyControl->GetMaximumBitRateFlag();
+		Info->ComponentControlFlag = pDigitalCopyControl->GetComponentControlFlag();
+		Info->CopyControlType = pDigitalCopyControl->GetCopyControlType();
+		Info->APSControlData = pDigitalCopyControl->GetAPSControlData();
+		Info->MaximumBitRate = pDigitalCopyControl->GetMaximumBitRate();
+		const int ComponentCount = pDigitalCopyControl->GetComponentControlCount();
+		Info->ComponentControlList.reserve(ComponentCount);
+		for (int i = 0; i < ComponentCount; i++) {
+			DigitalCopyControlDescriptor::ComponentControlInfo ComponentInfo;
+			if (pDigitalCopyControl->GetComponentControlInfo(i, &ComponentInfo))
+				Info->ComponentControlList.push_back(ComponentInfo);
+		}
+	}
+
+	const ContentAvailabilityDescriptor *pContentAvailability = nullptr;
+	if (pPMTDescriptors != nullptr) {
+		pContentAvailability =
+			pPMTDescriptors->GetDescriptor<ContentAvailabilityDescriptor>();
+		if (pContentAvailability != nullptr)
+			Info->ContentAvailabilitySource = CopyControlInfo::DescriptorSource::PMT;
+	}
+	if ((pContentAvailability == nullptr) && (pSITDescriptors != nullptr)) {
+		pContentAvailability =
+			pSITDescriptors->GetDescriptor<ContentAvailabilityDescriptor>();
+		if (pContentAvailability != nullptr)
+			Info->ContentAvailabilitySource = CopyControlInfo::DescriptorSource::SIT;
+	}
+
+	if (pContentAvailability != nullptr) {
+		Info->CopyRestrictionMode = pContentAvailability->GetCopyRestrictionMode();
+		Info->ImageConstraintToken = pContentAvailability->GetImageConstraintToken();
+		Info->RetentionMode = pContentAvailability->GetRetentionMode();
+		Info->RetentionState = pContentAvailability->GetRetentionState();
+		Info->EncryptionMode = pContentAvailability->GetEncryptionMode();
+	}
+
+	return (pDigitalCopyControl != nullptr) || (pContentAvailability != nullptr);
+}
+
+
+bool AnalyzerFilter::GetCopyControlInfoByID(
+	uint16_t ServiceID, ReturnArg<CopyControlInfo> Info) const
+{
+	BlockLock Lock(m_FilterLock);
+
+	return GetCopyControlInfo(GetServiceIndexByID(ServiceID), Info);
+}
+
+
 int AnalyzerFilter::GetESCount(int Index) const
 {
 	BlockLock Lock(m_FilterLock);

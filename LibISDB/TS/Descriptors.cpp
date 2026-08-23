@@ -839,7 +839,7 @@ bool DigitalCopyControlDescriptor::StoreContents(const uint8_t *pPayload)
 			return false;
 
 		while (Pos + 2 <= EndPos) {
-			ComponentControlInfo Info;
+			ComponentControlInfo Info{};
 
 			Info.ComponentTag                = pPayload[Pos++];
 			Info.DigitalRecordingControlData = pPayload[Pos] >> 6;
@@ -2241,6 +2241,45 @@ bool LDTLinkageDescriptor::StoreContents(const uint8_t *pPayload)
 		Info.DescriptionType = pPayload[Pos + 2] & 0x0F;
 		Pos += 4;
 	}
+
+	return true;
+}
+
+
+
+
+ContentAvailabilityDescriptor::ContentAvailabilityDescriptor() noexcept
+{
+	Reset();
+}
+
+
+void ContentAvailabilityDescriptor::Reset() noexcept
+{
+	DescriptorBase::Reset();
+
+	m_CopyRestrictionMode = false;
+	m_ImageConstraintToken = false;
+	m_RetentionMode = false;
+	m_RetentionState = 0;
+	m_EncryptionMode = false;
+	m_PrivateData.ClearSize();
+}
+
+
+bool ContentAvailabilityDescriptor::StoreContents(const uint8_t *pPayload)
+{
+	if (m_Tag != TAG)
+		return false;
+	if (m_Length < 1)
+		return false;
+
+	m_CopyRestrictionMode = (pPayload[0] & 0x40) != 0;
+	m_ImageConstraintToken = (pPayload[0] & 0x20) != 0;
+	m_RetentionMode = (pPayload[0] & 0x10) != 0;
+	m_RetentionState = (pPayload[0] >> 1) & 0x07;
+	m_EncryptionMode = (pPayload[0] & 0x01) != 0;
+	m_PrivateData.SetData(&pPayload[1], m_Length - 1);
 
 	return true;
 }

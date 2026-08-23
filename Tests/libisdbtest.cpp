@@ -436,6 +436,8 @@ namespace
 					0xFC,
 					0x48, 0x07, 0x01, 0x02, 0x54, 0x53, 0x02, 0x54, 0x53,
 					0x4D, 0x09, 0x6A, 0x70, 0x6E, 0x02, 0x54, 0x53, 0x02, 0x54, 0x53,
+					0xC1, 0x01, 0x86,
+					0xDE, 0x01, 0xA7,
 				};
 				const size_t Length = std::size(ServiceDescriptors);
 				Section.push_back(static_cast<uint8_t>(0x80 | (Status << 4) | (Length >> 8)));
@@ -461,6 +463,24 @@ namespace
 			0x00,
 			0x00,
 			0x04, 0x00, 0xE1, 0x00,
+		};
+		AppendCRC32MPEG2(&Section);
+		return Section;
+	}
+
+	std::vector<uint8_t> MakePMTSection()
+	{
+		std::vector<uint8_t> Section = {
+			0x02,
+			0xB0, 0x00,
+			0x04, 0x00,
+			0xC1,
+			0x00,
+			0x00,
+			0xE1, 0x00,
+			0xF0, 0x06,
+			0xC1, 0x01, 0xC8,
+			0xDE, 0x01, 0xF2,
 		};
 		AppendCRC32MPEG2(&Section);
 		return Section;
@@ -653,6 +673,44 @@ TEST_CASE("Analyzer uses SIT fallbacks", "[filter][sit]")
 }
 
 
+TEST_CASE("Analyzer copy control prefers PMT and falls back to SIT", "[filter][copy-control][sit]")
+{
+	LibISDB::AnalyzerFilter Analyzer;
+	StoreSection(&Analyzer, LibISDB::PID_PAT, MakePATSection());
+	StoreSection(&Analyzer, LibISDB::PID_SIT, MakeSITSection(false, SITSyntax::Extended));
+
+	LibISDB::AnalyzerFilter::CopyControlInfo Info;
+	REQUIRE(Analyzer.GetCopyControlInfoByID(0x0400, &Info));
+	CHECK(Info.DigitalCopyControlSource ==
+		LibISDB::AnalyzerFilter::CopyControlInfo::DescriptorSource::SIT);
+	CHECK(Info.DigitalRecordingControlData == 2);
+	CHECK(Info.CopyControlType == 1);
+	CHECK(Info.APSControlData == 2);
+	CHECK(Info.ContentAvailabilitySource ==
+		LibISDB::AnalyzerFilter::CopyControlInfo::DescriptorSource::SIT);
+	CHECK_FALSE(Info.CopyRestrictionMode);
+	CHECK(Info.ImageConstraintToken);
+	CHECK_FALSE(Info.RetentionMode);
+	CHECK(Info.RetentionState == 3);
+	CHECK(Info.EncryptionMode);
+
+	StoreSection(&Analyzer, 0x0100, MakePMTSection());
+
+	REQUIRE(Analyzer.GetCopyControlInfoByID(0x0400, &Info));
+	CHECK(Info.DigitalCopyControlSource ==
+		LibISDB::AnalyzerFilter::CopyControlInfo::DescriptorSource::PMT);
+	CHECK(Info.DigitalRecordingControlData == 3);
+	CHECK(Info.CopyControlType == 2);
+	CHECK(Info.ContentAvailabilitySource ==
+		LibISDB::AnalyzerFilter::CopyControlInfo::DescriptorSource::PMT);
+	CHECK(Info.CopyRestrictionMode);
+	CHECK(Info.ImageConstraintToken);
+	CHECK(Info.RetentionMode);
+	CHECK(Info.RetentionState == 1);
+	CHECK_FALSE(Info.EncryptionMode);
+}
+
+
 TEST_CASE("Partial transport stream descriptors", "[ts][descriptor][sit]")
 {
 	SECTION("partial_transport_stream_descriptor") {
@@ -687,6 +745,28 @@ TEST_CASE("Partial transport stream descriptors", "[ts][descriptor][sit]")
 		CHECK(pDescriptor->GetCountryCode() == 0x4A504E);
 		CHECK(pDescriptor->GetMediaType() == 0x5442);
 		CHECK(pDescriptor->GetNetworkID() == 0x7FF0);
+		REQUIRE(pDescriptor->GetPrivateData()->GetSize() == 2);
+		CHECK(pDescriptor->GetPrivateData()->GetAt(0) == 0x12);
+		CHECK(pDescriptor->GetPrivateData()->GetAt(1) == 0x34);
+	}
+
+	SECTION("content_availability_descriptor") {
+		const uint8_t Data[] = {
+			0xDE, 0x03,
+			0xD5,
+			0x12, 0x34,
+		};
+		LibISDB::DescriptorBlock Block;
+
+		REQUIRE(Block.ParseBlock(Data, sizeof(Data)) == 1);
+		const LibISDB::ContentAvailabilityDescriptor *pDescriptor =
+			Block.GetDescriptor<LibISDB::ContentAvailabilityDescriptor>();
+		REQUIRE(pDescriptor != nullptr);
+		CHECK(pDescriptor->GetCopyRestrictionMode());
+		CHECK_FALSE(pDescriptor->GetImageConstraintToken());
+		CHECK(pDescriptor->GetRetentionMode());
+		CHECK(pDescriptor->GetRetentionState() == 2);
+		CHECK(pDescriptor->GetEncryptionMode());
 		REQUIRE(pDescriptor->GetPrivateData()->GetSize() == 2);
 		CHECK(pDescriptor->GetPrivateData()->GetAt(0) == 0x12);
 		CHECK(pDescriptor->GetPrivateData()->GetAt(1) == 0x34);

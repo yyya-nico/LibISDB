@@ -188,6 +188,7 @@ DescriptorBase * DescriptorBlock::CreateDescriptorInstance(uint8_t Tag)
 	case BroadcasterNameDescriptor::TAG           : return new BroadcasterNameDescriptor;
 	case ComponentGroupDescriptor::TAG            : return new ComponentGroupDescriptor;
 	case LDTLinkageDescriptor::TAG                : return new LDTLinkageDescriptor;
+	case ContentAvailabilityDescriptor::TAG       : return new ContentAvailabilityDescriptor;
 	case AccessControlDescriptor::TAG             : return new AccessControlDescriptor;
 	case TerrestrialDeliverySystemDescriptor::TAG : return new TerrestrialDeliverySystemDescriptor;
 	case PartialReceptionDescriptor::TAG          : return new PartialReceptionDescriptor;

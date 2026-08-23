@@ -85,6 +85,30 @@ namespace LibISDB
 			uint16_t PID;
 		};
 
+		struct CopyControlInfo {
+			enum class DescriptorSource {
+				None,
+				PMT,
+				SIT,
+			};
+
+			DescriptorSource DigitalCopyControlSource = DescriptorSource::None;
+			uint8_t DigitalRecordingControlData = 0;
+			bool MaximumBitRateFlag = false;
+			bool ComponentControlFlag = false;
+			uint8_t CopyControlType = 0;
+			uint8_t APSControlData = 0;
+			uint8_t MaximumBitRate = 0;
+			std::vector<DigitalCopyControlDescriptor::ComponentControlInfo> ComponentControlList;
+
+			DescriptorSource ContentAvailabilitySource = DescriptorSource::None;
+			bool CopyRestrictionMode = false;
+			bool ImageConstraintToken = false;
+			bool RetentionMode = false;
+			uint8_t RetentionState = 0;
+			bool EncryptionMode = false;
+		};
+
 		struct ServiceInfo {
 			bool IsPMTAcquired;
 			uint16_t ServiceID;
@@ -218,6 +242,8 @@ namespace LibISDB
 		bool IsServicePMTAcquired(int Index) const;
 		bool Is1SegService(int Index) const;
 		uint16_t GetPMTPID(int Index) const;
+		bool GetCopyControlInfo(int Index, ReturnArg<CopyControlInfo> Info) const;
+		bool GetCopyControlInfoByID(uint16_t ServiceID, ReturnArg<CopyControlInfo> Info) const;
 
 		int GetESCount(int Index) const;
 		bool GetESList(int Index, ReturnArg<ESInfoList> List) const;
