@@ -382,11 +382,18 @@ namespace
 		REQUIRE(LibISDB::CRC32MPEG2::Calc(pSection->data(), pSection->size()) == 0);
 	}
 
-	std::vector<uint8_t> MakeSITSection(bool InvalidTransmissionInfoLength = false)
+	enum class SITSyntax {
+		Standard,
+		Extended,
+	};
+
+	std::vector<uint8_t> MakeSITSection(
+		bool InvalidTransmissionInfoLength = false,
+		SITSyntax Syntax = SITSyntax::Standard)
 	{
 		std::vector<uint8_t> Section = {
 			0x7F,       // table_id
-			0x70, 0x00, // section_syntax_indicator = 0, section_length
+			static_cast<uint8_t>(Syntax == SITSyntax::Extended ? 0xF0 : 0x70), 0x00,
 			0xFF, 0xFF, // reserved_future_use
 			0xC7,       // ISO_reserved, version_number = 3, current_next_indicator = 1
 			0x00,       // section_number
@@ -484,6 +491,51 @@ namespace
 		REQUIRE(pTable->StorePacket(&Packet));
 	}
 
+	void StoreSITSectionFragmented(
+		LibISDB::SITTable *pTable, const std::vector<uint8_t> &Section, size_t FirstSectionBytes)
+	{
+		REQUIRE(FirstSectionBytes > 0);
+		REQUIRE(FirstSectionBytes < Section.size());
+		REQUIRE(FirstSectionBytes <= 181);
+
+		std::array<uint8_t, LibISDB::TS_PACKET_SIZE> Data;
+		Data.fill(0xFF);
+		Data[0] = 0x47;
+		Data[1] = static_cast<uint8_t>(0x40 | (LibISDB::PID_SIT >> 8));
+		Data[2] = static_cast<uint8_t>(LibISDB::PID_SIT);
+		Data[3] = 0x30;
+		const size_t AdaptationFieldLength = 182 - FirstSectionBytes;
+		Data[4] = static_cast<uint8_t>(AdaptationFieldLength);
+		if (AdaptationFieldLength > 0)
+			Data[5] = 0x00;
+		const size_t PayloadPos = 5 + AdaptationFieldLength;
+		Data[PayloadPos] = 0x00;
+		std::copy_n(Section.begin(), FirstSectionBytes, Data.begin() + PayloadPos + 1);
+
+		LibISDB::TSPacket Packet;
+		Packet.SetData(Data.data(), Data.size());
+		REQUIRE(Packet.ParsePacket() == LibISDB::TSPacket::ParseResult::OK);
+		REQUIRE(pTable->StorePacket(&Packet));
+
+		size_t SectionPos = FirstSectionBytes;
+		uint8_t ContinuityCounter = 1;
+		while (SectionPos < Section.size()) {
+			Data.fill(0xFF);
+			Data[0] = 0x47;
+			Data[1] = static_cast<uint8_t>(LibISDB::PID_SIT >> 8);
+			Data[2] = static_cast<uint8_t>(LibISDB::PID_SIT);
+			Data[3] = static_cast<uint8_t>(0x10 | ContinuityCounter);
+			const size_t CopySize = std::min(Section.size() - SectionPos, Data.size() - 4);
+			std::copy_n(Section.begin() + SectionPos, CopySize, Data.begin() + 4);
+
+			Packet.SetData(Data.data(), Data.size());
+			REQUIRE(Packet.ParsePacket() == LibISDB::TSPacket::ParseResult::OK);
+			REQUIRE(pTable->StorePacket(&Packet));
+			SectionPos += CopySize;
+			ContinuityCounter = (ContinuityCounter + 1) & 0x0F;
+		}
+	}
+
 	void StoreSection(LibISDB::AnalyzerFilter *pAnalyzer, uint16_t PID, const std::vector<uint8_t> &Section)
 	{
 		LibISDB::TSPacket Packet = MakeSectionPacket(PID, Section);
@@ -493,47 +545,63 @@ namespace
 }
 
 
-TEST_CASE("SIT standard section syntax and running status", "[ts][sit]")
+TEST_CASE("SIT standard and extended section syntax", "[ts][sit]")
 {
-	LibISDB::SITTable Table;
-	StoreSITSection(&Table, MakeSITSection());
+	for (const SITSyntax Syntax : {SITSyntax::Standard, SITSyntax::Extended}) {
+		LibISDB::SITTable Table;
+		StoreSITSection(&Table, MakeSITSection(false, Syntax));
 
-	CHECK(Table.GetVersionNumber() == 3);
-	CHECK(Table.GetCurrentNextIndicator());
-	CHECK(Table.GetSectionNumber() == 0);
-	CHECK(Table.GetLastSectionNumber() == 0);
-	CHECK(Table.GetNetworkID() == 0x7FF0);
-	const LibISDB::DescriptorBlock *pTransmissionDescriptors = Table.GetTransmissionDescriptorBlock();
-	REQUIRE(pTransmissionDescriptors != nullptr);
-	REQUIRE(pTransmissionDescriptors->GetDescriptor<LibISDB::NetworkIdentificationDescriptor>() != nullptr);
-	const LibISDB::TSInformationDescriptor *pTSInfo =
-		pTransmissionDescriptors->GetDescriptor<LibISDB::TSInformationDescriptor>();
-	REQUIRE(pTSInfo != nullptr);
-	CHECK(pTSInfo->GetRemoteControlKeyID() == 5);
-	LibISDB::ARIBString TSName;
-	REQUIRE(pTSInfo->GetTSName(&TSName));
-	CHECK(TSName.size() == 2);
-	LibISDB::DateTime JSTTime;
-	REQUIRE(Table.GetJSTTime(&JSTTime));
-	CHECK(JSTTime.Hour == 13);
-	CHECK(JSTTime.Minute == 30);
-	REQUIRE(Table.GetServiceCount() == 8);
+		CHECK(Table.GetVersionNumber() == 3);
+		CHECK(Table.GetCurrentNextIndicator());
+		CHECK(Table.GetSectionNumber() == 0);
+		CHECK(Table.GetLastSectionNumber() == 0);
+		CHECK(Table.GetNetworkID() == 0x7FF0);
+		const LibISDB::DescriptorBlock *pTransmissionDescriptors = Table.GetTransmissionDescriptorBlock();
+		REQUIRE(pTransmissionDescriptors != nullptr);
+		REQUIRE(pTransmissionDescriptors->GetDescriptor<LibISDB::NetworkIdentificationDescriptor>() != nullptr);
+		const LibISDB::TSInformationDescriptor *pTSInfo =
+			pTransmissionDescriptors->GetDescriptor<LibISDB::TSInformationDescriptor>();
+		REQUIRE(pTSInfo != nullptr);
+		CHECK(pTSInfo->GetRemoteControlKeyID() == 5);
+		LibISDB::ARIBString TSName;
+		REQUIRE(pTSInfo->GetTSName(&TSName));
+		CHECK(TSName.size() == 2);
+		LibISDB::DateTime JSTTime;
+		REQUIRE(Table.GetJSTTime(&JSTTime));
+		CHECK(JSTTime.Hour == 13);
+		CHECK(JSTTime.Minute == 30);
+		REQUIRE(Table.GetServiceCount() == 8);
 
-	for (int i = 0; i < 8; i++) {
-		const LibISDB::SITTable::ServiceInfo *pService = Table.GetServiceInfo(i);
+		for (int i = 0; i < 8; i++) {
+			const LibISDB::SITTable::ServiceInfo *pService = Table.GetServiceInfo(i);
+			REQUIRE(pService != nullptr);
+			CHECK(pService->ServiceID == 0x0400 + i);
+			CHECK(pService->RunningStatus == i);
+		}
+
+		const LibISDB::SITTable::ServiceInfo *pService = Table.GetServiceInfo(0);
 		REQUIRE(pService != nullptr);
-		CHECK(pService->ServiceID == 0x0400 + i);
-		CHECK(pService->RunningStatus == i);
+		REQUIRE(pService->EventTimeValid);
+		CHECK(pService->EventStartTime.Hour == 11);
+		CHECK(pService->EventStartTime.Minute == 30);
+		CHECK(pService->EventDuration == 3600);
+		REQUIRE(pService->Descriptors.GetDescriptor<LibISDB::ServiceDescriptor>() != nullptr);
+		REQUIRE(pService->Descriptors.GetDescriptor<LibISDB::ShortEventDescriptor>() != nullptr);
 	}
+}
 
-	const LibISDB::SITTable::ServiceInfo *pService = Table.GetServiceInfo(0);
-	REQUIRE(pService != nullptr);
-	REQUIRE(pService->EventTimeValid);
-	CHECK(pService->EventStartTime.Hour == 11);
-	CHECK(pService->EventStartTime.Minute == 30);
-	CHECK(pService->EventDuration == 3600);
-	REQUIRE(pService->Descriptors.GetDescriptor<LibISDB::ServiceDescriptor>() != nullptr);
-	REQUIRE(pService->Descriptors.GetDescriptor<LibISDB::ShortEventDescriptor>() != nullptr);
+
+TEST_CASE("SIT auto syntax header can span packets", "[ts][sit]")
+{
+	for (const size_t FirstSectionBytes : {size_t{1}, size_t{2}, size_t{3}, size_t{7}}) {
+		LibISDB::SITTable Table;
+		StoreSITSectionFragmented(
+			&Table, MakeSITSection(false, SITSyntax::Extended), FirstSectionBytes);
+
+		CHECK(Table.GetVersionNumber() == 3);
+		CHECK(Table.GetNetworkID() == 0x7FF0);
+		CHECK(Table.GetServiceCount() == 8);
+	}
 }
 
 
@@ -543,11 +611,13 @@ TEST_CASE("SIT invalid loop length does not replace current table", "[ts][sit]")
 	StoreSITSection(&Table, MakeSITSection());
 	REQUIRE(Table.GetServiceCount() == 8);
 
-	StoreSITSection(&Table, MakeSITSection(true));
+	for (const SITSyntax Syntax : {SITSyntax::Standard, SITSyntax::Extended}) {
+		StoreSITSection(&Table, MakeSITSection(true, Syntax));
 
-	CHECK(Table.GetNetworkID() == 0x7FF0);
-	REQUIRE(Table.GetServiceCount() == 8);
-	CHECK(Table.GetServiceInfo(4)->RunningStatus == 4);
+		CHECK(Table.GetNetworkID() == 0x7FF0);
+		REQUIRE(Table.GetServiceCount() == 8);
+		CHECK(Table.GetServiceInfo(4)->RunningStatus == 4);
+	}
 }
 
 
@@ -555,7 +625,7 @@ TEST_CASE("Analyzer uses SIT fallbacks", "[filter][sit]")
 {
 	LibISDB::AnalyzerFilter Analyzer;
 	StoreSection(&Analyzer, LibISDB::PID_PAT, MakePATSection());
-	StoreSection(&Analyzer, LibISDB::PID_SIT, MakeSITSection());
+	StoreSection(&Analyzer, LibISDB::PID_SIT, MakeSITSection(false, SITSyntax::Extended));
 
 	const int ServiceIndex = Analyzer.GetServiceIndexByID(0x0400);
 	REQUIRE(ServiceIndex >= 0);

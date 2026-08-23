@@ -82,6 +82,12 @@ namespace LibISDB
 	class PSISectionParser
 	{
 	public:
+		enum class SectionSyntaxMode {
+			Standard,
+			Extended,
+			Auto,
+		};
+
 		class PSISectionHandler
 		{
 		public:
@@ -91,6 +97,7 @@ namespace LibISDB
 		};
 
 		PSISectionParser(PSISectionHandler *pSectionHandler, bool IsExtended = true, bool IgnoreSectionNumber = false);
+		PSISectionParser(PSISectionHandler *pSectionHandler, SectionSyntaxMode SyntaxMode, bool IgnoreSectionNumber = false);
 
 		void StorePacket(const TSPacket *pPacket);
 		void Reset() noexcept;
@@ -104,7 +111,7 @@ namespace LibISDB
 
 		PSISectionHandler *m_pPSISectionHandler;
 		PSISection m_PSISection;
-		bool m_IsExtended;
+		SectionSyntaxMode m_SyntaxMode;
 		bool m_IgnoreSectionNumber;
 
 		bool m_IsPayloadStoring;

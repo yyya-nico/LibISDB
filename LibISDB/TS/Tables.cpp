@@ -1028,7 +1028,7 @@ bool EITPfScheduleTable::ResetScheduleService(
 
 
 SITTable::SITTable()
-	: PSISingleTable(false)
+	: PSISingleTable(PSISectionParser::SectionSyntaxMode::Auto)
 {
 	Reset();
 }
@@ -1105,21 +1105,43 @@ bool SITTable::OnTableUpdate(const PSISection *pCurSection, const PSISection *pO
 	const uint16_t PayloadSize = pCurSection->GetPayloadSize();
 	const uint8_t *pData = pCurSection->GetPayloadData();
 
-	// SIT uses a private section with section_syntax_indicator set to 0, but has
-	// version and section fields of its own before transmission_info_loop.
-	static constexpr size_t HeaderSize = 5;
-	static constexpr size_t CRCSize = 4;
-	if ((pData == nullptr) || (PayloadSize < HeaderSize + 2 + CRCSize))
+	if (pData == nullptr)
 		return false;
 
-	const size_t DataSize = PayloadSize - CRCSize;
-	if ((pData[2] & 0xC0) != 0xC0)
-		return false;
+	uint8_t VersionNumber;
+	bool CurrentNextIndicator;
+	uint8_t SectionNumber;
+	uint8_t LastSectionNumber;
+	size_t Pos;
+	size_t DataSize;
 
-	const uint8_t VersionNumber = (pData[2] >> 1) & 0x1F;
-	const bool CurrentNextIndicator = (pData[2] & 0x01) != 0;
-	const uint8_t SectionNumber = pData[3];
-	const uint8_t LastSectionNumber = pData[4];
+	if (pCurSection->IsExtendedSection()) {
+		VersionNumber = pCurSection->GetVersionNumber();
+		CurrentNextIndicator = pCurSection->GetCurrentNextIndicator();
+		SectionNumber = pCurSection->GetSectionNumber();
+		LastSectionNumber = pCurSection->GetLastSectionNumber();
+		Pos = 0;
+		DataSize = PayloadSize;
+	} else {
+		// STD-B1 defines SIT as a standard section, while retaining the five
+		// fields corresponding to an extended section in its private payload.
+		static constexpr size_t HeaderSize = 5;
+		static constexpr size_t CRCSize = 4;
+		if (PayloadSize < HeaderSize + 2 + CRCSize)
+			return false;
+		if ((pData[2] & 0xC0) != 0xC0)
+			return false;
+
+		VersionNumber = (pData[2] >> 1) & 0x1F;
+		CurrentNextIndicator = (pData[2] & 0x01) != 0;
+		SectionNumber = pData[3];
+		LastSectionNumber = pData[4];
+		Pos = HeaderSize;
+		DataSize = PayloadSize - CRCSize;
+	}
+
+	if (Pos + 2 > DataSize)
+		return false;
 	if ((SectionNumber != 0) || (LastSectionNumber != 0))
 		return false;
 
@@ -1140,7 +1162,6 @@ bool SITTable::OnTableUpdate(const PSISection *pCurSection, const PSISection *pO
 	DescriptorBlock TransmissionDescriptors;
 	std::vector<ServiceInfo> ServiceList;
 
-	size_t Pos = HeaderSize;
 	const uint16_t TransmissionInfoLoopLength = Load16(&pData[Pos]) & 0x0FFF;
 	Pos += 2;
 	if (Pos + TransmissionInfoLoopLength > DataSize)

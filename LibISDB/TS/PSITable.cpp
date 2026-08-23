@@ -40,6 +40,13 @@ PSITableBase::PSITableBase(bool ExtendedSection, bool IgnoreSectionNumber)
 }
 
 
+PSITableBase::PSITableBase(PSISectionParser::SectionSyntaxMode SyntaxMode, bool IgnoreSectionNumber)
+	: m_PSISectionParser(this, SyntaxMode, IgnoreSectionNumber)
+	, m_UniqueID(0)
+{
+}
+
+
 void PSITableBase::Reset()
 {
 	m_PSISectionParser.Reset();
@@ -307,6 +314,12 @@ unsigned long long PSITable::GetSectionTableUniqueID(const PSISection *pSection)
 
 PSISingleTable::PSISingleTable(bool ExtendedSection)
 	: PSITableBase(ExtendedSection)
+{
+}
+
+
+PSISingleTable::PSISingleTable(PSISectionParser::SectionSyntaxMode SyntaxMode)
+	: PSITableBase(SyntaxMode)
 {
 }
 

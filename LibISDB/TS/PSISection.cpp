@@ -180,9 +180,19 @@ bool PSISection::PSIHeader::operator == (const PSIHeader &rhs) const noexcept
 
 PSISectionParser::PSISectionParser(
 	PSISectionHandler *pPSISectionHandler, bool IsExtended, bool IgnoreSectionNumber)
+	: PSISectionParser(
+		pPSISectionHandler,
+		IsExtended ? SectionSyntaxMode::Extended : SectionSyntaxMode::Standard,
+		IgnoreSectionNumber)
+{
+}
+
+
+PSISectionParser::PSISectionParser(
+	PSISectionHandler *pPSISectionHandler, SectionSyntaxMode SyntaxMode, bool IgnoreSectionNumber)
 	: m_pPSISectionHandler(pPSISectionHandler)
 	, m_PSISection(3 + 4093)
-	, m_IsExtended(IsExtended)
+	, m_SyntaxMode(SyntaxMode)
 	, m_IgnoreSectionNumber(IgnoreSectionNumber)
 	, m_IsPayloadStoring(false)
 	, m_StoreSize(0)
@@ -281,18 +291,40 @@ bool PSISectionParser::StoreHeader(const uint8_t *pData, uint8_t *pRemain)
 		return false;
 	}
 
-	const uint8_t HeaderSize = (m_IsExtended ? 8 : 3);
-	const uint8_t HeaderRemain = HeaderSize - static_cast<uint8_t>(m_PSISection.GetSize());
+	const uint8_t DataSize = *pRemain;
+	uint8_t StoredSize = static_cast<uint8_t>(m_PSISection.GetSize());
+	uint8_t ConsumedSize = 0;
 
-	if (HeaderRemain > *pRemain) {
+	// Auto mode first stores the common three-byte header, then determines
+	// whether the five-byte extended header follows from the actual SSI bit.
+	if ((m_SyntaxMode == SectionSyntaxMode::Auto) && (StoredSize < 3)) {
+		const uint8_t HeaderRemain = 3 - StoredSize;
+		if (HeaderRemain > DataSize) {
+			m_PSISection.AddData(pData, DataSize);
+			return false;
+		}
+
+		m_PSISection.AddData(pData, HeaderRemain);
+		StoredSize += HeaderRemain;
+		ConsumedSize += HeaderRemain;
+	}
+
+	const bool IsExtended = (m_SyntaxMode == SectionSyntaxMode::Auto)
+		? ((m_PSISection.GetAt(1) & 0x80) != 0)
+		: (m_SyntaxMode == SectionSyntaxMode::Extended);
+	const uint8_t HeaderSize = IsExtended ? 8 : 3;
+	const uint8_t HeaderRemain = HeaderSize - StoredSize;
+
+	if (HeaderRemain > DataSize - ConsumedSize) {
 		// ヘッダの途中までしかまだデータが無い
-		m_PSISection.AddData(pData, *pRemain);
+		m_PSISection.AddData(pData + ConsumedSize, DataSize - ConsumedSize);
 		return false;
 	}
 
-	m_PSISection.AddData(pData, HeaderRemain);
-	*pRemain = HeaderRemain;
-	if (m_PSISection.ParseHeader(m_IsExtended, m_IgnoreSectionNumber)) {
+	m_PSISection.AddData(pData + ConsumedSize, HeaderRemain);
+	ConsumedSize += HeaderRemain;
+	*pRemain = ConsumedSize;
+	if (m_PSISection.ParseHeader(IsExtended, m_IgnoreSectionNumber)) {
 		m_StoreSize = 3 + m_PSISection.GetSectionLength();
 		m_IsPayloadStoring = true;
 		return true;

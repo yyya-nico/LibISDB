@@ -62,6 +62,7 @@ namespace LibISDB
 		}
 
 		PSITableBase(bool ExtendedSection = true, bool IgnoreSectionNumber = false);
+		PSITableBase(PSISectionParser::SectionSyntaxMode SyntaxMode, bool IgnoreSectionNumber = false);
 		virtual ~PSITableBase() = default;
 
 		virtual void Reset();
@@ -141,6 +142,7 @@ namespace LibISDB
 	{
 	public:
 		PSISingleTable(bool ExtendedSection = true);
+		PSISingleTable(PSISectionParser::SectionSyntaxMode SyntaxMode);
 
 	// PSITableBase
 		void Reset() override;
