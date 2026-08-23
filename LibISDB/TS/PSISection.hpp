@@ -97,7 +97,9 @@ namespace LibISDB
 		};
 
 		PSISectionParser(PSISectionHandler *pSectionHandler, bool IsExtended = true, bool IgnoreSectionNumber = false);
+		PSISectionParser(PSISectionHandler *pSectionHandler, bool IsExtended, bool IgnoreSectionNumber, bool CheckCRC);
 		PSISectionParser(PSISectionHandler *pSectionHandler, SectionSyntaxMode SyntaxMode, bool IgnoreSectionNumber = false);
+		PSISectionParser(PSISectionHandler *pSectionHandler, SectionSyntaxMode SyntaxMode, bool IgnoreSectionNumber, bool CheckCRC);
 
 		void StorePacket(const TSPacket *pPacket);
 		void Reset() noexcept;
@@ -113,6 +115,7 @@ namespace LibISDB
 		PSISection m_PSISection;
 		SectionSyntaxMode m_SyntaxMode;
 		bool m_IgnoreSectionNumber;
+		bool m_CheckCRC;
 
 		bool m_IsPayloadStoring;
 		uint16_t m_StoreSize;

@@ -486,6 +486,15 @@ namespace
 		return Section;
 	}
 
+	std::vector<uint8_t> MakeDITSection(bool TransitionFlag)
+	{
+		return {
+			0x7E,
+			0x30, 0x01,
+			static_cast<uint8_t>(TransitionFlag ? 0xFF : 0x7F),
+		};
+	}
+
 	LibISDB::TSPacket MakeSectionPacket(uint16_t PID, const std::vector<uint8_t> &Section)
 	{
 		std::array<uint8_t, LibISDB::TS_PACKET_SIZE> Data;
@@ -708,6 +717,66 @@ TEST_CASE("Analyzer copy control prefers PMT and falls back to SIT", "[filter][c
 	CHECK(Info.RetentionMode);
 	CHECK(Info.RetentionState == 1);
 	CHECK_FALSE(Info.EncryptionMode);
+}
+
+
+TEST_CASE("DIT is delivered for every transition", "[ts][dit]")
+{
+	LibISDB::DITTable Table;
+	int UpdateCount = 0;
+	Table.SetSectionHandler(
+		[&UpdateCount](const LibISDB::PSITableBase *, const LibISDB::PSISection *) {
+			UpdateCount++;
+		});
+
+	const auto StoreDIT = [&Table](bool TransitionFlag) {
+		LibISDB::TSPacket Packet =
+			MakeSectionPacket(LibISDB::PID_DIT, MakeDITSection(TransitionFlag));
+		REQUIRE(Table.StorePacket(&Packet));
+	};
+
+	StoreDIT(true);
+	CHECK(UpdateCount == 1);
+	CHECK(Table.GetTransitionFlag());
+	CHECK(Table.GetCRCErrorCount() == 0);
+
+	// DIT is event information, so an identical section must be delivered again.
+	StoreDIT(true);
+	CHECK(UpdateCount == 2);
+	CHECK(Table.GetTransitionFlag());
+
+	StoreDIT(false);
+	CHECK(UpdateCount == 3);
+	CHECK_FALSE(Table.GetTransitionFlag());
+}
+
+
+TEST_CASE("DIT invalidates Analyzer caches", "[filter][dit][sit]")
+{
+	LibISDB::AnalyzerFilter Analyzer;
+	const auto StoreProgramInformation = [&Analyzer] {
+		StoreSection(&Analyzer, LibISDB::PID_PAT, MakePATSection());
+		StoreSection(&Analyzer, LibISDB::PID_SIT, MakeSITSection(false, SITSyntax::Extended));
+	};
+
+	StoreProgramInformation();
+	REQUIRE(Analyzer.GetServiceCount() == 1);
+	CHECK(Analyzer.GetNetworkID() == 0x7FF0);
+	LibISDB::String TSName;
+	REQUIRE(Analyzer.GetTSName(&TSName));
+
+	StoreSection(&Analyzer, LibISDB::PID_DIT, MakeDITSection(true));
+
+	CHECK(Analyzer.GetServiceCount() == 0);
+	CHECK(Analyzer.GetNetworkID() == LibISDB::NETWORK_ID_INVALID);
+	REQUIRE(Analyzer.GetTSName(&TSName));
+	CHECK(TSName.empty());
+
+	// Reacquisition must work even if the next DIT has identical bytes.
+	StoreProgramInformation();
+	REQUIRE(Analyzer.GetServiceCount() == 1);
+	StoreSection(&Analyzer, LibISDB::PID_DIT, MakeDITSection(true));
+	CHECK(Analyzer.GetServiceCount() == 0);
 }
 
 

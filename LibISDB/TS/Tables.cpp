@@ -1027,6 +1027,41 @@ bool EITPfScheduleTable::ResetScheduleService(
 
 
 
+DITTable::DITTable()
+	: PSIStreamTable(false, false, false)
+{
+	Reset();
+}
+
+
+void DITTable::Reset()
+{
+	PSIStreamTable::Reset();
+
+	m_TransitionFlag = false;
+}
+
+
+bool DITTable::OnTableUpdate(const PSISection *pCurSection)
+{
+	if ((pCurSection->GetTableID() != TABLE_ID)
+			|| pCurSection->IsExtendedSection()
+			|| (pCurSection->GetSectionLength() != 1)
+			|| (pCurSection->GetPayloadSize() != 1))
+		return false;
+
+	const uint8_t *pData = pCurSection->GetPayloadData();
+	if (pData == nullptr)
+		return false;
+
+	m_TransitionFlag = (pData[0] & 0x80) != 0;
+
+	return true;
+}
+
+
+
+
 SITTable::SITTable()
 	: PSISingleTable(PSISectionParser::SectionSyntaxMode::Auto)
 {

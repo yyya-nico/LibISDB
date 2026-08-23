@@ -180,20 +180,37 @@ bool PSISection::PSIHeader::operator == (const PSIHeader &rhs) const noexcept
 
 PSISectionParser::PSISectionParser(
 	PSISectionHandler *pPSISectionHandler, bool IsExtended, bool IgnoreSectionNumber)
+	: PSISectionParser(pPSISectionHandler, IsExtended, IgnoreSectionNumber, true)
+{
+}
+
+
+PSISectionParser::PSISectionParser(
+	PSISectionHandler *pPSISectionHandler, bool IsExtended, bool IgnoreSectionNumber, bool CheckCRC)
 	: PSISectionParser(
 		pPSISectionHandler,
 		IsExtended ? SectionSyntaxMode::Extended : SectionSyntaxMode::Standard,
-		IgnoreSectionNumber)
+		IgnoreSectionNumber,
+		CheckCRC)
 {
 }
 
 
 PSISectionParser::PSISectionParser(
 	PSISectionHandler *pPSISectionHandler, SectionSyntaxMode SyntaxMode, bool IgnoreSectionNumber)
+	: PSISectionParser(pPSISectionHandler, SyntaxMode, IgnoreSectionNumber, true)
+{
+}
+
+
+PSISectionParser::PSISectionParser(
+	PSISectionHandler *pPSISectionHandler, SectionSyntaxMode SyntaxMode,
+	bool IgnoreSectionNumber, bool CheckCRC)
 	: m_pPSISectionHandler(pPSISectionHandler)
 	, m_PSISection(3 + 4093)
 	, m_SyntaxMode(SyntaxMode)
 	, m_IgnoreSectionNumber(IgnoreSectionNumber)
+	, m_CheckCRC(CheckCRC)
 	, m_IsPayloadStoring(false)
 	, m_StoreSize(0)
 	, m_CRCErrorCount(0)
@@ -355,7 +372,8 @@ bool PSISectionParser::StorePayload(const uint8_t *pData, uint8_t *pRemain)
 	m_PSISection.AddData(pData, StoreRemain);
 
 	// CRC チェック
-	if (CRC32MPEG2::Calc(m_PSISection.GetData(), m_PSISection.GetSize()) == 0) {
+	if (!m_CheckCRC
+			|| (CRC32MPEG2::Calc(m_PSISection.GetData(), m_PSISection.GetSize()) == 0)) {
 		if (m_pPSISectionHandler != nullptr)
 			m_pPSISectionHandler->OnPSISection(this, &m_PSISection);
 		LIBISDB_TRACE_VERBOSE(

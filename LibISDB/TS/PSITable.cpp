@@ -40,6 +40,13 @@ PSITableBase::PSITableBase(bool ExtendedSection, bool IgnoreSectionNumber)
 }
 
 
+PSITableBase::PSITableBase(bool ExtendedSection, bool IgnoreSectionNumber, bool CheckCRC)
+	: m_PSISectionParser(this, ExtendedSection, IgnoreSectionNumber, CheckCRC)
+	, m_UniqueID(0)
+{
+}
+
+
 PSITableBase::PSITableBase(PSISectionParser::SectionSyntaxMode SyntaxMode, bool IgnoreSectionNumber)
 	: m_PSISectionParser(this, SyntaxMode, IgnoreSectionNumber)
 	, m_UniqueID(0)
@@ -357,6 +364,12 @@ bool PSISingleTable::OnTableUpdate(const PSISection *pCurSection, const PSISecti
 
 PSIStreamTable::PSIStreamTable(bool ExtendedSection, bool IgnoreSectionNumber)
 	: PSITableBase(ExtendedSection, IgnoreSectionNumber)
+{
+}
+
+
+PSIStreamTable::PSIStreamTable(bool ExtendedSection, bool IgnoreSectionNumber, bool CheckCRC)
+	: PSITableBase(ExtendedSection, IgnoreSectionNumber, CheckCRC)
 {
 }
 

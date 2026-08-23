@@ -53,6 +53,7 @@ void AnalyzerFilter::Reset()
 	m_PATUpdated = false;
 	m_SDTUpdated = false;
 	m_NITUpdated = false;
+	m_DITResetPending = false;
 #ifdef LIBISDB_ANALYZER_FILTER_EIT_SUPPORT
 	m_EITUpdated = false;
 	m_SendEITUpdatedEvent = false;
@@ -73,6 +74,8 @@ void AnalyzerFilter::Reset()
 	m_PIDMapManager.MapTarget(PID_NIT, PSITableBase::CreateWithHandler<NITMultiTable>(&AnalyzerFilter::OnNITSection, this));
 	// SDTテーブルPIDマップ追加
 	m_PIDMapManager.MapTarget(PID_SDT, PSITableBase::CreateWithHandler<SDTTableSet>(&AnalyzerFilter::OnSDTSection, this));
+	// DITテーブルPIDマップ追加
+	m_PIDMapManager.MapTarget(PID_DIT, PSITableBase::CreateWithHandler<DITTable>(&AnalyzerFilter::OnDITSection, this));
 	// SITテーブルPIDマップ追加
 	m_PIDMapManager.MapTarget(PID_SIT, PSITableBase::CreateWithHandler<SITTable>(&AnalyzerFilter::OnSITSection, this));
 	// BITテーブルPIDマップ追加
@@ -97,8 +100,11 @@ bool AnalyzerFilter::ReceiveData(DataStream *pData)
 	{
 		BlockLock Lock(m_FilterLock);
 
-		if (pData->Is<TSPacket>())
+		if (pData->Is<TSPacket>()) {
 			m_PIDMapManager.StorePacketStream(pData);
+			if (m_DITResetPending)
+				Reset();
+		}
 
 		OutputData(pData);
 	}
@@ -2584,6 +2590,21 @@ void AnalyzerFilter::OnNITSection(const PSITableBase *pTable, const PSISection *
 	m_FilterLock.Unlock();
 	m_EventListenerList.CallEventListener(&EventListener::OnNITUpdated, this);
 	m_FilterLock.Lock();
+}
+
+
+void AnalyzerFilter::OnDITSection(const PSITableBase *pTable, const PSISection *pSection)
+{
+	LIBISDB_TRACE(LIBISDB_STR("AnalyzerFilter::OnDITSection()\n"));
+
+	const DITTable *pDITTable = dynamic_cast<const DITTable *>(pTable);
+	if (LIBISDB_TRACE_ERROR_IF(pDITTable == nullptr))
+		return;
+
+	// DIT indicates that cached SI, including PAT and PMT, may no longer be valid.
+	// Defer Reset() until the section parser has returned to avoid deleting it
+	// from inside its own callback.
+	m_DITResetPending = true;
 }
 
 

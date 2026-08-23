@@ -363,6 +363,28 @@ namespace LibISDB
 			uint16_t NetworkID, uint16_t TransportStreamID, uint16_t ServiceID);
 	};
 
+	/** DIT テーブルクラス */
+	class DITTable
+		: public PSIStreamTable
+	{
+	public:
+		static constexpr uint8_t TABLE_ID = 0x7E_u8;
+
+		DITTable();
+
+	// PSIStreamTable
+		void Reset() override;
+
+	// DITTable
+		bool GetTransitionFlag() const noexcept { return m_TransitionFlag; }
+
+	protected:
+	// PSIStreamTable
+		bool OnTableUpdate(const PSISection *pCurSection) override;
+
+		bool m_TransitionFlag;
+	};
+
 	/** SIT テーブルクラス */
 	class SITTable
 		: public PSISingleTable

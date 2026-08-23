@@ -404,6 +404,7 @@ namespace LibISDB
 		bool m_PATUpdated;
 		bool m_SDTUpdated;
 		bool m_NITUpdated;
+		bool m_DITResetPending;
 #ifdef LIBISDB_ANALYZER_FILTER_EIT_SUPPORT
 		bool m_EITUpdated;
 		bool m_SendEITUpdatedEvent;
@@ -427,6 +428,7 @@ namespace LibISDB
 		void OnPMTSection(const PSITableBase *pTable, const PSISection *pSection);
 		void OnSDTSection(const PSITableBase *pTable, const PSISection *pSection);
 		void OnNITSection(const PSITableBase *pTable, const PSISection *pSection);
+		void OnDITSection(const PSITableBase *pTable, const PSISection *pSection);
 		void OnSITSection(const PSITableBase *pTable, const PSISection *pSection);
 		void OnBITSection(const PSITableBase *pTable, const PSISection *pSection);
 #ifdef LIBISDB_ANALYZER_FILTER_EIT_SUPPORT

@@ -62,6 +62,7 @@ namespace LibISDB
 		}
 
 		PSITableBase(bool ExtendedSection = true, bool IgnoreSectionNumber = false);
+		PSITableBase(bool ExtendedSection, bool IgnoreSectionNumber, bool CheckCRC);
 		PSITableBase(PSISectionParser::SectionSyntaxMode SyntaxMode, bool IgnoreSectionNumber = false);
 		virtual ~PSITableBase() = default;
 
@@ -169,6 +170,7 @@ namespace LibISDB
 	{
 	public:
 		PSIStreamTable(bool ExtendedSection = true, bool IgnoreSectionNumber = false);
+		PSIStreamTable(bool ExtendedSection, bool IgnoreSectionNumber, bool CheckCRC);
 
 	// PSITableBase
 		void Reset() override;
