@@ -1028,6 +1028,7 @@ bool EITPfScheduleTable::ResetScheduleService(
 
 
 SITTable::SITTable()
+	: PSISingleTable(false)
 {
 	Reset();
 }
@@ -1037,6 +1038,10 @@ void SITTable::Reset()
 {
 	PSISingleTable::Reset();
 
+	m_VersionNumber = 0;
+	m_CurrentNextIndicator = false;
+	m_SectionNumber = 0;
+	m_LastSectionNumber = 0;
 	m_NetworkID = NETWORK_ID_INVALID;
 	m_TransmissionDescriptors.Reset();
 	m_ServiceList.clear();
@@ -1086,36 +1091,65 @@ bool SITTable::OnTableUpdate(const PSISection *pCurSection, const PSISection *pO
 	if (pCurSection->GetTableID() != TABLE_ID)
 		return false;
 
-	const uint16_t DataSize = pCurSection->GetPayloadSize();
+	const uint16_t PayloadSize = pCurSection->GetPayloadSize();
 	const uint8_t *pData = pCurSection->GetPayloadData();
 
-	if (DataSize < 2)
+	// SIT uses a private section with section_syntax_indicator set to 0, but has
+	// version and section fields of its own before transmission_info_loop.
+	static constexpr size_t HeaderSize = 5;
+	static constexpr size_t CRCSize = 4;
+	if ((pData == nullptr) || (PayloadSize < HeaderSize + 2 + CRCSize))
 		return false;
 
-	m_NetworkID = pCurSection->GetTableIDExtension();
-	m_ServiceList.clear();
+	const size_t DataSize = PayloadSize - CRCSize;
+	if ((pData[2] & 0xC0) != 0xC0)
+		return false;
+
+	const uint8_t VersionNumber = (pData[2] >> 1) & 0x1F;
+	const bool CurrentNextIndicator = (pData[2] & 0x01) != 0;
+	const uint8_t SectionNumber = pData[3];
+	const uint8_t LastSectionNumber = pData[4];
+	if ((SectionNumber != 0) || (LastSectionNumber != 0))
+		return false;
+
+	auto IsDescriptorBlockValid = [](const uint8_t *pBlock, size_t BlockLength) {
+		size_t DescPos = 0;
+		while (DescPos < BlockLength) {
+			if (DescPos + 2 > BlockLength)
+				return false;
+			const size_t DescriptorSize = 2 + pBlock[DescPos + 1];
+			if (DescPos + DescriptorSize > BlockLength)
+				return false;
+			DescPos += DescriptorSize;
+		}
+		return true;
+	};
+
+	uint16_t NetworkID = NETWORK_ID_INVALID;
+	DescriptorBlock TransmissionDescriptors;
+	std::vector<ServiceInfo> ServiceList;
 	bool DefaultEventTimeValid = false;
 	DateTime DefaultEventStartTime;
 	uint32_t DefaultEventDuration = 0;
 
-	const uint16_t TransmissionInfoLoopLength = Load16(&pData[0]) & 0x0FFF;
-	size_t Pos = 2;
+	size_t Pos = HeaderSize;
+	const uint16_t TransmissionInfoLoopLength = Load16(&pData[Pos]) & 0x0FFF;
+	Pos += 2;
 	if (Pos + TransmissionInfoLoopLength > DataSize)
 		return false;
+	if (!IsDescriptorBlockValid(&pData[Pos], TransmissionInfoLoopLength))
+		return false;
 
-	m_TransmissionDescriptors.Reset();
 	if (TransmissionInfoLoopLength > 0)
-		m_TransmissionDescriptors.ParseBlock(&pData[Pos], TransmissionInfoLoopLength);
+		TransmissionDescriptors.ParseBlock(&pData[Pos], TransmissionInfoLoopLength);
 
 	for (size_t DescPos = 0; DescPos + 2 <= TransmissionInfoLoopLength;) {
 		const uint8_t Tag = pData[Pos + DescPos];
 		const uint8_t Length = pData[Pos + DescPos + 1];
-		if (DescPos + 2 + Length > TransmissionInfoLoopLength)
-			break;
 
 		// network_identification_descriptor
 		if ((Tag == 0xC2_u8) && (Length >= 7))
-			m_NetworkID = Load16(&pData[Pos + DescPos + 7]);
+			NetworkID = Load16(&pData[Pos + DescPos + 7]);
 
 		// partial_transport_stream_time_descriptor
 		if ((Tag == 0xC3_u8) && (Length >= 9)) {
@@ -1129,12 +1163,14 @@ bool SITTable::OnTableUpdate(const PSISection *pCurSection, const PSISection *pO
 
 	Pos += TransmissionInfoLoopLength;
 
-	while (Pos + 4 <= DataSize) {
-		ServiceInfo &Info = m_ServiceList.emplace_back();
+	while (Pos < DataSize) {
+		if (Pos + 4 > DataSize)
+			return false;
+
+		ServiceInfo Info;
 
 		Info.ServiceID = Load16(&pData[Pos + 0]);
-		Info.RunningStatus = pData[Pos + 2] >> 5;
-		Info.FreeCAMode = (pData[Pos + 2] & 0x10) != 0;
+		Info.RunningStatus = (pData[Pos + 2] >> 4) & 0x07;
 		Info.EventTimeValid = DefaultEventTimeValid;
 		if (DefaultEventTimeValid)
 			Info.EventStartTime = DefaultEventStartTime;
@@ -1145,7 +1181,9 @@ bool SITTable::OnTableUpdate(const PSISection *pCurSection, const PSISection *pO
 		const uint16_t DescriptorLoopLength = Load16(&pData[Pos + 2]) & 0x0FFF;
 		Pos += 4;
 		if (Pos + DescriptorLoopLength > DataSize)
-			break;
+			return false;
+		if (!IsDescriptorBlockValid(&pData[Pos], DescriptorLoopLength))
+			return false;
 
 		if (DescriptorLoopLength > 0)
 			Info.Descriptors.ParseBlock(&pData[Pos], DescriptorLoopLength);
@@ -1153,8 +1191,6 @@ bool SITTable::OnTableUpdate(const PSISection *pCurSection, const PSISection *pO
 		for (size_t DescPos = 0; DescPos + 2 <= DescriptorLoopLength;) {
 			const uint8_t Tag = pData[Pos + DescPos];
 			const uint8_t Length = pData[Pos + DescPos + 1];
-			if (DescPos + 2 + Length > DescriptorLoopLength)
-				break;
 
 			// partial_transport_stream_time_descriptor
 			if ((Tag == 0xC3_u8) && (Length >= 9)) {
@@ -1167,7 +1203,16 @@ bool SITTable::OnTableUpdate(const PSISection *pCurSection, const PSISection *pO
 		}
 
 		Pos += DescriptorLoopLength;
+		ServiceList.push_back(std::move(Info));
 	}
+
+	m_VersionNumber = VersionNumber;
+	m_CurrentNextIndicator = CurrentNextIndicator;
+	m_SectionNumber = SectionNumber;
+	m_LastSectionNumber = LastSectionNumber;
+	m_NetworkID = NetworkID;
+	m_TransmissionDescriptors = std::move(TransmissionDescriptors);
+	m_ServiceList = std::move(ServiceList);
 
 	return true;
 }

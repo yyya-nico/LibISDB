@@ -1362,7 +1362,7 @@ bool AnalyzerFilter::GetEventInfo(int ServiceIndex, ReturnArg<EventInfo> Info, b
 			Info->StartTime.Reset();
 		Info->Duration = pSITService->EventDuration;
 		Info->RunningStatus = pSITService->RunningStatus;
-		Info->FreeCAMode = pSITService->FreeCAMode;
+		Info->FreeCAMode = m_ServiceList[ServiceIndex].FreeCAMode;
 
 		if (!GetEventName(ServiceIndex, &Info->EventName, false))
 			Info->EventName.clear();
@@ -2483,7 +2483,7 @@ void AnalyzerFilter::OnSITSection(const PSITableBase *pTable, const PSISection *
 		SDTServiceInfo &SDTInfo = m_SDTServiceList.emplace_back();
 		SDTInfo.ServiceID = pService->ServiceID;
 		SDTInfo.RunningStatus = pService->RunningStatus;
-		SDTInfo.FreeCAMode = pService->FreeCAMode;
+		SDTInfo.FreeCAMode = false;
 		SDTInfo.ProviderName.clear();
 		SDTInfo.ServiceName.clear();
 		SDTInfo.ServiceType = SERVICE_TYPE_INVALID;
@@ -2504,8 +2504,8 @@ void AnalyzerFilter::OnSITSection(const PSITableBase *pTable, const PSISection *
 
 		if (ServiceIndex >= 0) {
 			ServiceInfo &Service = m_ServiceList[ServiceIndex];
+			SDTInfo.FreeCAMode = Service.FreeCAMode;
 			Service.RunningStatus = pService->RunningStatus;
-			Service.FreeCAMode = pService->FreeCAMode;
 			Service.ServiceType = SDTInfo.ServiceType;
 			Service.ProviderName = SDTInfo.ProviderName;
 			Service.ServiceName = SDTInfo.ServiceName;

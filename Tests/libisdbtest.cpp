@@ -352,6 +352,125 @@ TEST_CASE("DateTime", "[base][time]")
 }
 
 
+#include "../LibISDB/TS/Tables.hpp"
+#include "../LibISDB/TS/TSPacket.hpp"
+
+namespace
+{
+	void Append16(std::vector<uint8_t> *pData, uint16_t Value)
+	{
+		pData->push_back(static_cast<uint8_t>(Value >> 8));
+		pData->push_back(static_cast<uint8_t>(Value));
+	}
+
+	void AppendCRC32MPEG2(std::vector<uint8_t> *pSection)
+	{
+		const size_t SectionLength = pSection->size() - 3 + 4;
+
+		REQUIRE(SectionLength <= 0x0FFF);
+		(*pSection)[1] = static_cast<uint8_t>(((*pSection)[1] & 0xF0) | (SectionLength >> 8));
+		(*pSection)[2] = static_cast<uint8_t>(SectionLength);
+
+		const uint32_t CRC = LibISDB::CRC32MPEG2::Calc(pSection->data(), pSection->size());
+		pSection->push_back(static_cast<uint8_t>(CRC >> 24));
+		pSection->push_back(static_cast<uint8_t>(CRC >> 16));
+		pSection->push_back(static_cast<uint8_t>(CRC >> 8));
+		pSection->push_back(static_cast<uint8_t>(CRC));
+
+		REQUIRE(LibISDB::CRC32MPEG2::Calc(pSection->data(), pSection->size()) == 0);
+	}
+
+	std::vector<uint8_t> MakeSITSection(bool InvalidTransmissionInfoLength = false)
+	{
+		std::vector<uint8_t> Section = {
+			0x7F,       // table_id
+			0x70, 0x00, // section_syntax_indicator = 0, section_length
+			0xFF, 0xFF, // reserved_future_use
+			0xC7,       // ISO_reserved, version_number = 3, current_next_indicator = 1
+			0x00,       // section_number
+			0x00,       // last_section_number
+			0xF0, 0x09, // transmission_info_loop_length
+			0xC2, 0x07, // network_identification_descriptor
+			0x4A, 0x50, 0x4E, // country_code = "JPN"
+			0x54, 0x42,       // media_type = "TB"
+			0x7F, 0xF0,       // network_id
+		};
+
+		if (InvalidTransmissionInfoLength)
+			Section[9] = 0x7F;
+
+		for (uint8_t Status = 0; Status < 8; Status++) {
+			Append16(&Section, static_cast<uint16_t>(0x0400 + Status));
+			Section.push_back(static_cast<uint8_t>(0x80 | (Status << 4)));
+			Section.push_back(0x00); // service_loop_length
+		}
+
+		AppendCRC32MPEG2(&Section);
+		return Section;
+	}
+
+	LibISDB::TSPacket MakeSectionPacket(uint16_t PID, const std::vector<uint8_t> &Section)
+	{
+		std::array<uint8_t, LibISDB::TS_PACKET_SIZE> Data;
+		Data.fill(0xFF);
+
+		REQUIRE(Section.size() <= Data.size() - 5);
+		Data[0] = 0x47;
+		Data[1] = static_cast<uint8_t>(0x40 | (PID >> 8));
+		Data[2] = static_cast<uint8_t>(PID);
+		Data[3] = 0x10;
+		Data[4] = 0x00; // pointer_field
+		std::copy(Section.begin(), Section.end(), Data.begin() + 5);
+
+		LibISDB::TSPacket Packet;
+		Packet.SetData(Data.data(), Data.size());
+		REQUIRE(Packet.ParsePacket() == LibISDB::TSPacket::ParseResult::OK);
+		return Packet;
+	}
+
+	void StoreSITSection(LibISDB::SITTable *pTable, const std::vector<uint8_t> &Section)
+	{
+		LibISDB::TSPacket Packet = MakeSectionPacket(LibISDB::PID_SIT, Section);
+		REQUIRE(pTable->StorePacket(&Packet));
+	}
+}
+
+
+TEST_CASE("SIT standard section syntax and running status", "[ts][sit]")
+{
+	LibISDB::SITTable Table;
+	StoreSITSection(&Table, MakeSITSection());
+
+	CHECK(Table.GetVersionNumber() == 3);
+	CHECK(Table.GetCurrentNextIndicator());
+	CHECK(Table.GetSectionNumber() == 0);
+	CHECK(Table.GetLastSectionNumber() == 0);
+	CHECK(Table.GetNetworkID() == 0x7FF0);
+	REQUIRE(Table.GetServiceCount() == 8);
+
+	for (int i = 0; i < 8; i++) {
+		const LibISDB::SITTable::ServiceInfo *pService = Table.GetServiceInfo(i);
+		REQUIRE(pService != nullptr);
+		CHECK(pService->ServiceID == 0x0400 + i);
+		CHECK(pService->RunningStatus == i);
+	}
+}
+
+
+TEST_CASE("SIT invalid loop length does not replace current table", "[ts][sit]")
+{
+	LibISDB::SITTable Table;
+	StoreSITSection(&Table, MakeSITSection());
+	REQUIRE(Table.GetServiceCount() == 8);
+
+	StoreSITSection(&Table, MakeSITSection(true));
+
+	CHECK(Table.GetNetworkID() == 0x7FF0);
+	REQUIRE(Table.GetServiceCount() == 8);
+	CHECK(Table.GetServiceInfo(4)->RunningStatus == 4);
+}
+
+
 
 
 #ifdef LIBISDB_TEST_WMAIN

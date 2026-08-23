@@ -371,7 +371,6 @@ namespace LibISDB
 		struct ServiceInfo {
 			uint16_t ServiceID;
 			uint8_t RunningStatus;
-			bool FreeCAMode;
 			bool EventTimeValid;
 			DateTime EventStartTime;
 			uint32_t EventDuration;
@@ -386,6 +385,10 @@ namespace LibISDB
 		void Reset() override;
 
 	// SITTable
+		uint8_t GetVersionNumber() const noexcept { return m_VersionNumber; }
+		bool GetCurrentNextIndicator() const noexcept { return m_CurrentNextIndicator; }
+		uint8_t GetSectionNumber() const noexcept { return m_SectionNumber; }
+		uint8_t GetLastSectionNumber() const noexcept { return m_LastSectionNumber; }
 		uint16_t GetNetworkID() const;
 		const DescriptorBlock * GetTransmissionDescriptorBlock() const;
 		int GetServiceCount() const;
@@ -396,6 +399,10 @@ namespace LibISDB
 	// PSISingleTable
 		bool OnTableUpdate(const PSISection *pCurSection, const PSISection *pOldSection) override;
 
+		uint8_t m_VersionNumber;
+		bool m_CurrentNextIndicator;
+		uint8_t m_SectionNumber;
+		uint8_t m_LastSectionNumber;
 		uint16_t m_NetworkID;
 		DescriptorBlock m_TransmissionDescriptors;
 		std::vector<ServiceInfo> m_ServiceList;
