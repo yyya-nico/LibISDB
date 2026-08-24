@@ -468,6 +468,36 @@ namespace
 		return Section;
 	}
 
+	std::vector<uint8_t> MakeSITSectionWithServiceTimeDescriptor()
+	{
+		std::vector<uint8_t> Section = MakeSITSection();
+
+		const size_t TransmissionLoopPos = 10;
+		const size_t TimeDescriptorPos = TransmissionLoopPos + 9;
+		const size_t TimeDescriptorSize = 20;
+		std::vector<uint8_t> TimeDescriptor(
+			Section.begin() + TimeDescriptorPos,
+			Section.begin() + TimeDescriptorPos + TimeDescriptorSize);
+		Section.erase(
+			Section.begin() + TimeDescriptorPos,
+			Section.begin() + TimeDescriptorPos + TimeDescriptorSize);
+		Section[9] -= static_cast<uint8_t>(TimeDescriptorSize);
+
+		const size_t ServicePos = TransmissionLoopPos + 15;
+		const uint16_t ServiceLoopLength =
+			(static_cast<uint16_t>(Section[ServicePos + 2] & 0x0F) << 8) |
+			Section[ServicePos + 3];
+		const uint16_t NewServiceLoopLength = ServiceLoopLength + TimeDescriptorSize;
+		Section[ServicePos + 2] =
+			static_cast<uint8_t>((Section[ServicePos + 2] & 0xF0) | (NewServiceLoopLength >> 8));
+		Section[ServicePos + 3] = static_cast<uint8_t>(NewServiceLoopLength);
+		Section.insert(Section.begin() + ServicePos + 4, TimeDescriptor.begin(), TimeDescriptor.end());
+
+		Section.resize(Section.size() - 4);
+		AppendCRC32MPEG2(&Section);
+		return Section;
+	}
+
 	std::vector<uint8_t> MakePMTSection()
 	{
 		std::vector<uint8_t> Section = {
@@ -620,6 +650,23 @@ TEST_CASE("SIT standard and extended section syntax", "[ts][sit]")
 }
 
 
+TEST_CASE("SIT gets JST time from service descriptor loop", "[ts][sit]")
+{
+	LibISDB::SITTable Table;
+	StoreSITSection(&Table, MakeSITSectionWithServiceTimeDescriptor());
+
+	const LibISDB::DescriptorBlock *pTransmissionDescriptors =
+		Table.GetTransmissionDescriptorBlock();
+	REQUIRE(pTransmissionDescriptors != nullptr);
+	CHECK(pTransmissionDescriptors->GetDescriptor<LibISDB::PartialTransportStreamTimeDescriptor>() == nullptr);
+
+	LibISDB::DateTime JSTTime;
+	REQUIRE(Table.GetJSTTime(&JSTTime));
+	CHECK(JSTTime.Hour == 13);
+	CHECK(JSTTime.Minute == 30);
+}
+
+
 TEST_CASE("SIT auto syntax header can span packets", "[ts][sit]")
 {
 	for (const size_t FirstSectionBytes : {size_t{1}, size_t{2}, size_t{3}, size_t{7}}) {
@@ -679,6 +726,19 @@ TEST_CASE("Analyzer uses SIT fallbacks", "[filter][sit]")
 	CHECK(Event.StartTime.Hour == 11);
 	CHECK(Event.StartTime.Minute == 30);
 	CHECK(Event.Duration == 3600);
+}
+
+
+TEST_CASE("Analyzer gets time from SIT service descriptor loop", "[filter][sit]")
+{
+	LibISDB::AnalyzerFilter Analyzer;
+	StoreSection(&Analyzer, LibISDB::PID_PAT, MakePATSection());
+	StoreSection(&Analyzer, LibISDB::PID_SIT, MakeSITSectionWithServiceTimeDescriptor());
+
+	LibISDB::DateTime JSTTime;
+	REQUIRE(Analyzer.GetTOTTime(&JSTTime));
+	CHECK(JSTTime.Hour == 13);
+	CHECK(JSTTime.Minute == 30);
 }
 
 

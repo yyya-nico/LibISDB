@@ -1096,7 +1096,18 @@ bool SITTable::GetJSTTime(ReturnArg<DateTime> Time) const
 
 	const PartialTransportStreamTimeDescriptor *pTimeDesc =
 		m_TransmissionDescriptors.GetDescriptor<PartialTransportStreamTimeDescriptor>();
-	return (pTimeDesc != nullptr) && pTimeDesc->GetJSTTime(Time);
+	if ((pTimeDesc != nullptr) && pTimeDesc->GetJSTTime(Time))
+		return true;
+
+	// Some partial transport streams put the time descriptor in the service
+	// descriptor loop instead of the transmission information loop.
+	for (const ServiceInfo &Service : m_ServiceList) {
+		pTimeDesc = Service.Descriptors.GetDescriptor<PartialTransportStreamTimeDescriptor>();
+		if ((pTimeDesc != nullptr) && pTimeDesc->GetJSTTime(Time))
+			return true;
+	}
+
+	return false;
 }
 
 
