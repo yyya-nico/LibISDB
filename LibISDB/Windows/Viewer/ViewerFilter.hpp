@@ -139,6 +139,8 @@ namespace LibISDB
 		bool IsOpen() const;
 
 		bool Flush();
+		bool BeginChannelChange();
+		void EndChannelChange(bool Succeeded);
 
 		bool AddEventListener(EventListener *pEventListener);
 		bool RemoveEventListener(EventListener *pEventListener);

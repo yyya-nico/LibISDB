@@ -247,7 +247,16 @@ void EVRPresentEngine::ReleaseResources()
 {
 	OnReleaseResources();
 
+	BlockLock Lock(m_RepaintSurfaceLock);
 	m_SurfaceRepaint.Release();
+}
+
+
+void EVRPresentEngine::ClearVideo()
+{
+	BlockLock Lock(m_RepaintSurfaceLock);
+	m_SurfaceRepaint.Release();
+	PaintFrameWithGDI();
 }
 
 
@@ -307,9 +316,12 @@ HRESULT EVRPresentEngine::PresentSample(IMFSample *pSample, LONGLONG llTarget)
 
 			pBuffer->Release();
 		}
-	} else if (m_SurfaceRepaint) {
-		pSurface = m_SurfaceRepaint.Get();
-		pSurface->AddRef();
+	} else {
+		BlockLock Lock(m_RepaintSurfaceLock);
+		if (m_SurfaceRepaint) {
+			pSurface = m_SurfaceRepaint.Get();
+			pSurface->AddRef();
+		}
 	}
 
 	if (pSurface != nullptr) {

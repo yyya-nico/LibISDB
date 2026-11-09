@@ -959,6 +959,25 @@ bool ViewerFilter::Flush()
 }
 
 
+bool ViewerFilter::BeginChannelChange()
+{
+	BlockLock Lock(m_FilterLock);
+	return m_VideoRenderer && m_VideoRenderer->BeginVideoChange();
+}
+
+
+void ViewerFilter::EndChannelChange(bool Succeeded)
+{
+	BlockLock Lock(m_FilterLock);
+	if (m_VideoRenderer) {
+		if (Succeeded && Flush())
+			m_VideoRenderer->ClearVideo();
+		else
+			m_VideoRenderer->CancelVideoChange();
+	}
+}
+
+
 bool ViewerFilter::AddEventListener(EventListener *pEventListener)
 {
 	return m_EventListenerList.AddEventListener(pEventListener);

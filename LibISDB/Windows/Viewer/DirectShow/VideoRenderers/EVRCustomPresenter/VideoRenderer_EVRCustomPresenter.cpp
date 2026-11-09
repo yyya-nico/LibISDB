@@ -45,6 +45,14 @@ bool VideoRenderer_EVRCustomPresenter::Finalize()
 }
 
 
+void VideoRenderer_EVRCustomPresenter::ClearVideo()
+{
+	if (m_Presenter)
+		static_cast<EVRPresenter *>(m_Presenter.Get())->ClearVideo();
+	CancelVideoChange();
+}
+
+
 HRESULT VideoRenderer_EVRCustomPresenter::InitializePresenter(IBaseFilter *pFilter)
 {
 	HRESULT hr;

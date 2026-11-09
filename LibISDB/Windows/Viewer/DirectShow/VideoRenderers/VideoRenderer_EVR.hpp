@@ -61,6 +61,9 @@ namespace LibISDB::DirectShow
 		COMMemoryPointer<> GetCurrentImage() override;
 		bool ShowCursor(bool Show) override;
 		bool RepaintVideo(HWND hwnd, HDC hdc) override;
+		bool BeginVideoChange() override;
+		void ClearVideo() override;
+		void CancelVideoChange() override;
 		bool DisplayModeChanged() override;
 		bool SetVisible(bool Visible) override;
 
@@ -75,6 +78,10 @@ namespace LibISDB::DirectShow
 
 #ifdef LIBISDB_EVR_USE_VIDEO_WINDOW
 		HWND m_hwndMessageDrain = nullptr;
+		HWND m_hwndBlank = nullptr;
+		int m_BlankFrameCount = 0;
+		bool m_ChangingVideo = false;
+		bool m_WaitingForFrame = false;
 		bool m_ShowCursor = true;
 
 		static VideoRenderer_EVR * GetThis(HWND hwnd);

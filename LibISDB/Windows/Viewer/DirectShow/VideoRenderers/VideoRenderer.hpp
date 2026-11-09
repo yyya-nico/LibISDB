@@ -71,6 +71,9 @@ namespace LibISDB::DirectShow
 		virtual COMMemoryPointer<> GetCurrentImage() { return COMMemoryPointer<>(); }
 		virtual bool ShowCursor(bool Show) { return true; }
 		virtual bool RepaintVideo(HWND hwnd, HDC hdc) { return true; }
+		virtual bool BeginVideoChange() { return false; }
+		virtual void ClearVideo() {}
+		virtual void CancelVideoChange() {}
 		virtual bool DisplayModeChanged() { return true; }
 		virtual bool SetVisible(bool Visible) { return true; }
 		virtual bool ShowProperty(HWND hwndOwner);

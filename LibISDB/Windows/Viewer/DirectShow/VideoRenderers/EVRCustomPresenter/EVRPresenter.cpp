@@ -919,6 +919,15 @@ HRESULT EVRPresenter::GetAspectRatioMode(DWORD *pdwAspectRatioMode)
 }
 
 
+void EVRPresenter::ClearVideo()
+{
+	BlockLock Lock(m_ObjectLock);
+	m_Repaint = false;
+	m_Prerolled = false;
+	m_PresentEngine->ClearVideo();
+}
+
+
 HRESULT EVRPresenter::RepaintVideo()
 {
 	BlockLock Lock(m_ObjectLock);

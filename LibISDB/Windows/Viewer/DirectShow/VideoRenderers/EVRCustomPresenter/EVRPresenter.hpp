@@ -47,6 +47,7 @@ namespace LibISDB::DirectShow
 	{
 	public:
 		static HRESULT CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppv);
+		void ClearVideo();
 
 	// IUnknown
 		STDMETHODIMP QueryInterface(REFIID riid, void **ppv) override;

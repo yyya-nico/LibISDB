@@ -42,6 +42,7 @@ namespace LibISDB::DirectShow
 	public:
 		RendererType GetRendererType() const noexcept override { return RendererType::EVRCustomPresenter; }
 		bool Finalize() override;
+		void ClearVideo() override;
 		bool HasProperty() override { return false; } // プロパティの数値が不定値になる
 
 	private:

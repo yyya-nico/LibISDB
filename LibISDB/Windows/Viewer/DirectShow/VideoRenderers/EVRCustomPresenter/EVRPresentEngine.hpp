@@ -58,6 +58,7 @@ namespace LibISDB::DirectShow
 
 		HRESULT CreateVideoSamples(IMFMediaType *pFormat, VideoSampleList &videoSampleQueue);
 		void ReleaseResources();
+		void ClearVideo();
 
 		HRESULT CheckDeviceState(DeviceState *pState);
 

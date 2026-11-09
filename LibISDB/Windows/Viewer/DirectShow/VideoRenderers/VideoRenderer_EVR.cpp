@@ -39,6 +39,7 @@
 
 
 #pragma comment(lib, "mfuuid.lib")
+#pragma comment(lib, "strmiids.lib")
 
 
 namespace LibISDB::DirectShow
@@ -47,6 +48,24 @@ namespace LibISDB::DirectShow
 
 #define EVR_VIDEO_WINDOW_CLASS TEXT("LibISDB EVR Video Window")
 
+#ifdef LIBISDB_EVR_USE_VIDEO_WINDOW
+namespace
+{
+
+constexpr UINT_PTR TIMER_EVR_BLANK_VIDEO = 1;
+
+bool GetFramesDrawn(IBaseFilter *pRenderer, int &Frames)
+{
+	if (pRenderer == nullptr)
+		return false;
+
+	COMPointer<IQualProp> Quality;
+	return SUCCEEDED(pRenderer->QueryInterface(IID_IQualProp, reinterpret_cast<void **>(Quality.GetPP())))
+		&& Quality->get_FramesDrawn(&Frames) == S_OK;
+}
+
+}
+#endif
 
 
 
@@ -223,6 +242,23 @@ bool VideoRenderer_EVR::Initialize(
 	m_hwndRender = hwndRender;
 #ifdef LIBISDB_EVR_USE_VIDEO_WINDOW
 	m_hwndMessageDrain = hwndMessageDrain;
+	{
+		// EVR の描画先を表示したまま、合成時に黒で覆う。
+		m_hwndBlank = ::CreateWindowEx(
+			WS_EX_LAYERED | WS_EX_TRANSPARENT, EVR_VIDEO_WINDOW_CLASS, nullptr,
+			WS_CHILD, 0, 0, 0, 0,
+			m_hwndVideo, nullptr, hinst, nullptr);
+		if (m_hwndBlank != nullptr && !::SetLayeredWindowAttributes(m_hwndBlank, 0, 255, LWA_ALPHA)) {
+			::DestroyWindow(m_hwndBlank);
+			m_hwndBlank = nullptr;
+		}
+		if (m_hwndBlank == nullptr) {
+			// Windows 7 では子ウィンドウに WS_EX_LAYERED を使用できない。
+			m_hwndBlank = ::CreateWindowEx(
+				0, EVR_VIDEO_WINDOW_CLASS, nullptr, WS_CHILD, 0, 0, 0, 0,
+				m_hwndVideo, nullptr, hinst, nullptr);
+		}
+	}
 #endif
 
 	ResetError();
@@ -381,6 +417,10 @@ bool VideoRenderer_EVR::ShowCursor(bool Show)
 
 bool VideoRenderer_EVR::RepaintVideo(HWND hwnd, HDC hdc)
 {
+#ifdef LIBISDB_EVR_USE_VIDEO_WINDOW
+	if (m_hwndBlank != nullptr && (::GetWindowLongPtr(m_hwndBlank, GWL_STYLE) & WS_VISIBLE))
+		return true;
+#endif
 	bool Result = false;
 
 	if (m_Renderer) {
@@ -393,6 +433,52 @@ bool VideoRenderer_EVR::RepaintVideo(HWND hwnd, HDC hdc)
 	}
 
 	return Result;
+}
+
+
+bool VideoRenderer_EVR::BeginVideoChange()
+{
+#ifdef LIBISDB_EVR_USE_VIDEO_WINDOW
+	if (m_hwndBlank != nullptr && !m_ChangingVideo
+			&& ::GetWindowThreadProcessId(m_hwndVideo, nullptr) == ::GetCurrentThreadId()) {
+		RECT rc;
+		::GetClientRect(m_hwndVideo, &rc);
+		if (::SetWindowPos(
+				m_hwndBlank, HWND_TOP, 0, 0, rc.right, rc.bottom,
+				SWP_NOACTIVATE | SWP_SHOWWINDOW)) {
+			m_ChangingVideo = true;
+			::RedrawWindow(m_hwndBlank, nullptr, nullptr, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW);
+			return true;
+		}
+	}
+#endif
+	return false;
+}
+
+
+void VideoRenderer_EVR::ClearVideo()
+{
+#ifdef LIBISDB_EVR_USE_VIDEO_WINDOW
+	if (m_hwndBlank != nullptr && GetFramesDrawn(m_Renderer.Get(), m_BlankFrameCount)
+			&& ::SetTimer(m_hwndVideo, TIMER_EVR_BLANK_VIDEO, 16, nullptr) != 0) {
+		m_ChangingVideo = false;
+		m_WaitingForFrame = true;
+	} else {
+		CancelVideoChange();
+	}
+#endif
+}
+
+
+void VideoRenderer_EVR::CancelVideoChange()
+{
+#ifdef LIBISDB_EVR_USE_VIDEO_WINDOW
+	m_ChangingVideo = false;
+	if (m_hwndBlank != nullptr && !m_WaitingForFrame) {
+		::ShowWindow(m_hwndBlank, SW_HIDE);
+		RepaintVideo(m_hwndVideo, nullptr);
+	}
+#endif
 }
 
 
@@ -477,6 +563,9 @@ VideoRenderer_EVR * VideoRenderer_EVR::GetThis(HWND hwnd)
 
 LRESULT CALLBACK VideoRenderer_EVR::VideoWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (uMsg != WM_CREATE && GetThis(hwnd) == nullptr)
+		return uMsg == WM_NCHITTEST ? HTTRANSPARENT : ::DefWindowProc(hwnd, uMsg, wParam, lParam);
+
 	switch (uMsg) {
 	case WM_CREATE:
 		{
@@ -491,6 +580,11 @@ LRESULT CALLBACK VideoRenderer_EVR::VideoWndProc(HWND hwnd, UINT uMsg, WPARAM wP
 		{
 			VideoRenderer_EVR *pThis = GetThis(hwnd);
 
+			if (pThis->m_hwndBlank != nullptr) {
+				::SetWindowPos(
+					pThis->m_hwndBlank, nullptr, 0, 0, LOWORD(lParam), HIWORD(lParam),
+					SWP_NOACTIVATE | SWP_NOZORDER);
+			}
 			if (pThis->m_Renderer) {
 				IMFVideoDisplayControl *pDisplayControl = pThis->GetVideoDisplayControl();
 
@@ -503,6 +597,21 @@ LRESULT CALLBACK VideoRenderer_EVR::VideoWndProc(HWND hwnd, UINT uMsg, WPARAM wP
 			}
 		}
 		return 0;
+
+	case WM_TIMER:
+		if (wParam == TIMER_EVR_BLANK_VIDEO) {
+			VideoRenderer_EVR *pThis = GetThis(hwnd);
+			int Frames;
+			if (pThis->m_WaitingForFrame && !pThis->m_ChangingVideo
+					&& GetFramesDrawn(pThis->m_Renderer.Get(), Frames)
+					&& Frames > 0 && Frames != pThis->m_BlankFrameCount) {
+				::KillTimer(hwnd, TIMER_EVR_BLANK_VIDEO);
+				pThis->m_WaitingForFrame = false;
+				pThis->CancelVideoChange();
+			}
+			return 0;
+		}
+		break;
 
 	case WM_CHAR:
 	case WM_DEADCHAR:
@@ -569,6 +678,10 @@ LRESULT CALLBACK VideoRenderer_EVR::VideoWndProc(HWND hwnd, UINT uMsg, WPARAM wP
 		{
 			VideoRenderer_EVR *pThis = GetThis(hwnd);
 
+			::KillTimer(hwnd, TIMER_EVR_BLANK_VIDEO);
+			pThis->m_ChangingVideo = false;
+			pThis->m_WaitingForFrame = false;
+			pThis->m_hwndBlank = nullptr;
 			pThis->m_hwndVideo = nullptr;
 		}
 		return 0;
